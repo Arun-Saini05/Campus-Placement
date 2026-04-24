@@ -265,6 +265,15 @@ data class OfficerStudentResponse(
     val skills: List<String>,
     val placementStatus: String
 )
+
+@Serializable
+data class MassNotificationRequest(
+    val title: String,
+    val message: String,
+    val targetAudience: String,
+    val type: String = "ANNOUNCEMENT"
+)
+
 @Serializable
 data class NotificationResponse(
     val id: Int,

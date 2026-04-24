@@ -157,6 +157,9 @@ public interface SmartCampusApi {
                 @Query("status") String status
         );
 
+        @POST("officer/notifications/mass")
+        Call<JsonObject> sendMassNotification(@Header("Authorization") String token, @Body Map<String, Object> body);
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);

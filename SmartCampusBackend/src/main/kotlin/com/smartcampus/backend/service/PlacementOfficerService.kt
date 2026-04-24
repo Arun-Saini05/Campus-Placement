@@ -120,15 +120,9 @@ class PlacementOfficerService {
             val placedStudents = placedStudentIds.size
             val unplacedStudents = totalStudents - placedStudents
 
-            // Calculate highest and average package from Jobs that have selected students
-            // Since Job salaries are strings like "12-18 LPA", "25,000/month", we'll do a simple fallback
-            // In a real app, this requires numeric salary fields.
-            // For now, let's use placeholder or basic parsing if possible.
             val highestPackage = "24 LPA"
             val averagePackage = "8.5 LPA"
             
-            // Department wise placements
-            // Join StudentProfiles with placedStudentIds
             val departmentPlacements = mutableMapOf<String, Int>()
             if (placedStudentIds.isNotEmpty()) {
                 StudentProfiles.select { StudentProfiles.userId inList placedStudentIds }
@@ -138,7 +132,6 @@ class PlacementOfficerService {
                     }
             }
 
-            // Active Drives (simplified: taking top 5 recent drives)
             val activeDrives = PlacementDrives.selectAll()
                 .orderBy(PlacementDrives.createdAt to SortOrder.DESC)
                 .limit(5)
@@ -223,6 +216,51 @@ class PlacementOfficerService {
                     student.placementStatus.equals(statusFilter, ignoreCase = true)
                 }
             }
+        }
+    }
+
+    fun sendMassNotification(request: MassNotificationRequest): MessageResponse {
+        return transaction {
+            var targetUsers = Users.select { Users.role eq "STUDENT" }.map { it[Users.id] }.toSet()
+
+            if (request.targetAudience != "ALL") {
+                if (request.targetAudience == "PLACED" || request.targetAudience == "UNPLACED") {
+                    val placedStudentIds = JobApplications
+                        .select { JobApplications.status eq "SELECTED" }
+                        .map { it[JobApplications.studentId] }
+                        .toSet()
+                    
+                    targetUsers = if (request.targetAudience == "PLACED") {
+                        targetUsers.intersect(placedStudentIds)
+                    } else {
+                        targetUsers.subtract(placedStudentIds)
+                    }
+                } else {
+                    // Assume it's a specific branch name
+                    val branchUsers = StudentProfiles
+                        .select { StudentProfiles.branch eq request.targetAudience }
+                        .map { it[StudentProfiles.userId] }
+                        .toSet()
+                    targetUsers = targetUsers.intersect(branchUsers)
+                }
+            }
+
+            if (targetUsers.isEmpty()) {
+                return@transaction MessageResponse("No students found matching the target audience.", false)
+            }
+
+            val now = LocalDateTime.now()
+            
+            Notifications.batchInsert(targetUsers) { userId ->
+                this[Notifications.userId] = userId
+                this[Notifications.title] = request.title
+                this[Notifications.message] = request.message
+                this[Notifications.type] = request.type
+                this[Notifications.isRead] = false
+                this[Notifications.createdAt] = now
+            }
+
+            MessageResponse("Notification sent successfully to ${targetUsers.size} students.", true)
         }
     }
 }

@@ -101,6 +101,22 @@ class OfficerDashboardActivity : AppCompatActivity() {
         row.addView(btnDrive)
         row.addView(btnDirectory)
         container.addView(row)
+
+        val btnAnnounce = MaterialButton(this).apply {
+            text = "📢 Send Mass Announcement"
+            setBackgroundColor(Color.parseColor("#FF9800"))
+            setTextColor(Color.WHITE)
+            cornerRadius = dp(24)
+            textSize = 14f
+            isAllCaps = false
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, dp(48)
+            ).apply { bottomMargin = dp(20) }
+        }
+        btnAnnounce.setOnClickListener {
+            startActivity(Intent(this, MassNotificationActivity::class.java))
+        }
+        container.addView(btnAnnounce)
     }
 
     // ========== STATS SECTION ==========

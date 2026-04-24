@@ -72,6 +72,17 @@ fun Route.officerRoutes() {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
                 }
             }
+
+            // Mass Notification System
+            post("/notifications/mass") {
+                try {
+                    val request = call.receive<MassNotificationRequest>()
+                    val response = officerService.sendMassNotification(request)
+                    call.respond(if (response.success) HttpStatusCode.OK else HttpStatusCode.BadRequest, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
         }
     }
 }
