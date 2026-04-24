@@ -136,27 +136,30 @@ class CreateDriveActivity : AppCompatActivity() {
         container.addView(btnBack)
     }
 
-    private fun addTextField(container: LinearLayout, hint: String, placeholder: String): TextInputEditText {
-        val inputLayout = TextInputLayout(this, null, com.google.android.material.R.attr.textInputOutlinedStyle).apply {
-            this.hint = hint
-            boxBackgroundColor = resources.getColor(R.color.bg_card, null)
-            setHintTextColor(resources.getColorStateList(R.color.text_secondary, null))
+    private fun addTextField(container: LinearLayout, label: String, placeholder: String): TextInputEditText {
+        val inputLayout = TextInputLayout(this).apply {
+            hint = label
+            placeholderText = placeholder
+            boxBackgroundMode = TextInputLayout.BOX_BACKGROUND_OUTLINE
             setBoxStrokeColorStateList(resources.getColorStateList(R.color.primary, null))
+            setHintTextColor(resources.getColorStateList(R.color.text_secondary, null))
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = 16 }
+            ).apply { bottomMargin = dp(16) }
         }
 
-        val editText = TextInputEditText(this).apply {
+        val editText = TextInputEditText(inputLayout.context).apply {
             setTextColor(resources.getColor(R.color.text_primary, null))
-            setHintTextColor(resources.getColor(R.color.text_tertiary, null))
-            this.hint = placeholder
-            textSize = 14f
+            textSize = 15f
+            setPadding(dp(12), dp(16), dp(12), dp(16))
         }
 
         inputLayout.addView(editText)
         container.addView(inputLayout)
         return editText
     }
+
+    private fun dp(value: Int): Int =
+        (value * resources.displayMetrics.density).toInt()
 }
