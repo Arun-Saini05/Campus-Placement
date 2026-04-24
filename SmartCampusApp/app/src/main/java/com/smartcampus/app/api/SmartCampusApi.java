@@ -146,6 +146,9 @@ public interface SmartCampusApi {
         @GET("officer/drives/{driveId}/eligible")
         Call<List<JsonObject>> getEligibleStudents(@Header("Authorization") String token, @Path("driveId") int driveId);
 
+        @GET("officer/stats")
+        Call<JsonObject> getOfficerStats(@Header("Authorization") String token);
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);

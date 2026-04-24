@@ -60,6 +60,8 @@
 
         <!-- Officer -->
         <activity android:name=".ui.officer.OfficerDashboardActivity" />
+        <activity android:name=".ui.officer.CreateDriveActivity" />
+        <activity android:name=".ui.officer.EligibleStudentsActivity" />
 
         <!-- Recruiter -->
         <activity android:name=".ui.recruiter.RecruiterDashboardActivity" />
