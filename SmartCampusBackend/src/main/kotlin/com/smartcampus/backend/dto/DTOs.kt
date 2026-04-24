@@ -308,6 +308,18 @@ data class DashboardAnalytics(
     val applicationSuccessRate: Float = 0f
 )
 
+@Serializable
+data class OfficerDashboardResponse(
+    val totalStudents: Int,
+    val placedStudents: Int,
+    val unplacedStudents: Int,
+    val highestPackage: String,
+    val averagePackage: String,
+    val totalOffers: Int,
+    val activeDrives: List<PlacementDriveResponse>,
+    val departmentWisePlacements: Map<String, Int>
+)
+
 // ==================== COMMON ====================
 @Serializable
 data class MessageResponse(

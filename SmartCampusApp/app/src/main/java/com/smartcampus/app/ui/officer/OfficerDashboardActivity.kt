@@ -88,29 +88,144 @@ class OfficerDashboardActivity : AppCompatActivity() {
             override fun onResponse(call: Call<JsonObject>, resp: Response<JsonObject>) {
                 if (resp.isSuccessful && resp.body() != null) {
                     val s = resp.body()!!
-                    addStatsRow(
-                        s.get("totalStudents")?.asInt ?: 0,
-                        s.get("totalJobs")?.asInt ?: 0,
-                        s.get("totalApplications")?.asInt ?: 0
-                    )
+                    
+                    val total = s.get("totalStudents")?.asInt ?: 0
+                    val placed = s.get("placedStudents")?.asInt ?: 0
+                    val unplaced = s.get("unplacedStudents")?.asInt ?: 0
+                    val highest = s.get("highestPackage")?.asString ?: "N/A"
+                    val avg = s.get("averagePackage")?.asString ?: "N/A"
+                    val offers = s.get("totalOffers")?.asInt ?: 0
+                    
+                    val deptStats = s.getAsJsonObject("departmentWisePlacements")
+
+                    addStatsGrid(total, placed, unplaced, highest, avg, offers)
+                    addDepartmentChart(deptStats)
                 }
             }
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {}
         })
     }
 
-    private fun addStatsRow(students: Int, jobs: Int, applications: Int) {
-        val row = LinearLayout(this).apply {
+    private fun addStatsGrid(total: Int, placed: Int, unplaced: Int, highest: String, avg: String, offers: Int) {
+        // Row 1: Students & Placed
+        val row1 = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(20) }
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(12) }
         }
-        row.addView(buildStatCard("TOTAL STUDENTS", "$students", "📊 +12% from last year", Color.parseColor("#00E5FF")))
-        row.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(10), 0) })
-        row.addView(buildStatCard("ACTIVE JOBS", "$jobs", "📋 $applications applications", Color.parseColor("#58A6FF")))
-        container.addView(row)
+        val placedPerc = if(total > 0) (placed * 100 / total) else 0
+        row1.addView(buildStatCard("STUDENTS", "$total", "$unplaced unplaced", Color.parseColor("#00E5FF")))
+        row1.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(12), 0) })
+        row1.addView(buildStatCard("PLACED", "$placed", "$placedPerc% placement", Color.parseColor("#3FB950")))
+        container.addView(row1)
+
+        // Row 2: Packages
+        val row2 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(24) }
+        }
+        row2.addView(buildStatCard("HIGHEST PKG", highest, "$offers total offers", Color.parseColor("#F0883E")))
+        row2.addView(View(this).apply { layoutParams = LinearLayout.LayoutParams(dp(12), 0) })
+        row2.addView(buildStatCard("AVERAGE PKG", avg, "Across all branches", Color.parseColor("#58A6FF")))
+        container.addView(row2)
+    }
+
+    private fun addDepartmentChart(deptStats: JsonObject?) {
+        if (deptStats == null || deptStats.size() == 0) return
+
+        container.addView(TextView(this).apply {
+            text = "Department-wise Placements"
+            textSize = 16f; setTextColor(Color.WHITE)
+            setTypeface(typeface, Typeface.BOLD)
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(12) }
+        })
+
+        val chartCard = MaterialCardView(this).apply {
+            setCardBackgroundColor(Color.parseColor("#161B22"))
+            radius = dp(16).toFloat()
+            setContentPadding(dp(16), dp(16), dp(16), dp(16))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(24) }
+        }
+
+        val chartLayout = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        
+        // Find max value to scale bars
+        var maxCount = 1
+        for (key in deptStats.keySet()) {
+            val count = deptStats.get(key).asInt
+            if (count > maxCount) maxCount = count
+        }
+
+        val colors = listOf("#6C63FF", "#00BCD4", "#F0883E", "#3FB950")
+        var colorIdx = 0
+
+        for (key in deptStats.keySet()) {
+            val count = deptStats.get(key).asInt
+            val percentage = (count.toFloat() / maxCount) * 100
+
+            val itemLayout = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+                ).apply { bottomMargin = dp(12) }
+            }
+
+            // Label
+            val labelRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            labelRow.addView(TextView(this).apply {
+                text = key; textSize = 12f; setTextColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            })
+            labelRow.addView(TextView(this).apply {
+                text = "$count"; textSize = 12f; setTextColor(Color.parseColor("#8B949E"))
+                setTypeface(typeface, Typeface.BOLD)
+            })
+            itemLayout.addView(labelRow)
+
+            // Bar background
+            val barBg = FrameLayout(this).apply {
+                layoutParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, dp(8)
+                ).apply { topMargin = dp(4) }
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#21262D"))
+                    cornerRadius = dp(4).toFloat()
+                }
+            }
+
+            // Colored Bar
+            val barFill = View(this).apply {
+                layoutParams = FrameLayout.LayoutParams(
+                    0, dp(8)
+                )
+                background = GradientDrawable().apply {
+                    setColor(Color.parseColor(colors[colorIdx % colors.size]))
+                    cornerRadius = dp(4).toFloat()
+                }
+            }
+            barBg.addView(barFill)
+            
+            // Animate bar width (simulated with post)
+            barFill.post {
+                val fullWidth = barBg.width
+                barFill.layoutParams = FrameLayout.LayoutParams((fullWidth * percentage / 100).toInt(), dp(8))
+                barFill.requestLayout()
+            }
+
+            itemLayout.addView(barBg)
+            chartLayout.addView(itemLayout)
+            colorIdx++
+        }
+
+        chartCard.addView(chartLayout)
+        container.addView(chartCard)
     }
 
     private fun buildStatCard(label: String, value: String, sub: String, color: Int): MaterialCardView {
@@ -128,14 +243,14 @@ class OfficerDashboardActivity : AppCompatActivity() {
             letterSpacing = 0.1f
         })
         inner.addView(TextView(this).apply {
-            text = value; textSize = 32f
+            text = value; textSize = 24f // slightly smaller to fit
             setTextColor(color)
             setTypeface(typeface, Typeface.BOLD)
             setPadding(0, dp(4), 0, dp(4))
         })
         inner.addView(TextView(this).apply {
             text = sub; textSize = 10f
-            setTextColor(Color.parseColor("#3FB950"))
+            setTextColor(Color.parseColor("#8B949E")) // Make subtext muted gray
         })
         card.addView(inner)
         return card
