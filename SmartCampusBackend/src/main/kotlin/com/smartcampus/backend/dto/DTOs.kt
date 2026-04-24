@@ -255,6 +255,17 @@ data class PlacementDriveResponse(
 
 // ==================== NOTIFICATION DTOs ====================
 @Serializable
+data class OfficerStudentResponse(
+    val userId: Int,
+    val name: String,
+    val email: String,
+    val branch: String?,
+    val semester: Int?,
+    val cgpa: Float?,
+    val skills: List<String>,
+    val placementStatus: String
+)
+@Serializable
 data class NotificationResponse(
     val id: Int,
     val title: String,

@@ -58,6 +58,20 @@ fun Route.officerRoutes() {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
                 }
             }
+
+            // Search/Filter all students
+            get("/students") {
+                try {
+                    val branch = call.request.queryParameters["branch"]
+                    val minCgpa = call.request.queryParameters["minCgpa"]?.toFloatOrNull()
+                    val status = call.request.queryParameters["status"]
+
+                    val students = officerService.searchStudents(branch, minCgpa, status)
+                    call.respond(HttpStatusCode.OK, students)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
         }
     }
 }

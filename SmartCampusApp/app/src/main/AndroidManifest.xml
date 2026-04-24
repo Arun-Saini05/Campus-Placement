@@ -62,6 +62,7 @@
         <activity android:name=".ui.officer.OfficerDashboardActivity" />
         <activity android:name=".ui.officer.CreateDriveActivity" />
         <activity android:name=".ui.officer.EligibleStudentsActivity" />
+        <activity android:name=".ui.officer.StudentDirectoryActivity" />
 
         <!-- Recruiter -->
         <activity android:name=".ui.recruiter.RecruiterDashboardActivity" />

@@ -65,21 +65,42 @@ class OfficerDashboardActivity : AppCompatActivity() {
 
     // ========== CREATE DRIVE BUTTON ==========
     private fun addCreateDriveButton() {
-        val btn = MaterialButton(this).apply {
-            text = "＋ Create New Drive"
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { bottomMargin = dp(20) }
+        }
+
+        val btnDrive = MaterialButton(this).apply {
+            text = "＋ New Drive"
             setBackgroundColor(Color.parseColor("#00BCD4"))
             setTextColor(Color.WHITE)
             cornerRadius = dp(24)
-            textSize = 14f
+            textSize = 13f
             isAllCaps = false
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT, dp(48)
-            ).apply { bottomMargin = dp(20) }
+            layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginEnd = dp(8) }
         }
-        btn.setOnClickListener {
+        btnDrive.setOnClickListener {
             startActivity(Intent(this, CreateDriveActivity::class.java))
         }
-        container.addView(btn)
+
+        val btnDirectory = MaterialButton(this).apply {
+            text = "🔍 Students"
+            setBackgroundColor(Color.parseColor("#3FB950"))
+            setTextColor(Color.WHITE)
+            cornerRadius = dp(24)
+            textSize = 13f
+            isAllCaps = false
+            layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) }
+        }
+        btnDirectory.setOnClickListener {
+            startActivity(Intent(this, StudentDirectoryActivity::class.java))
+        }
+
+        row.addView(btnDrive)
+        row.addView(btnDirectory)
+        container.addView(row)
     }
 
     // ========== STATS SECTION ==========

@@ -171,4 +171,58 @@ class PlacementOfficerService {
             )
         }
     }
+
+    fun searchStudents(branchFilter: String?, minCgpaFilter: Float?, statusFilter: String?): List<OfficerStudentResponse> {
+        return transaction {
+            // Get all placed student IDs
+            val placedStudentIds = JobApplications
+                .select { JobApplications.status eq "SELECTED" }
+                .map { it[JobApplications.studentId] }
+                .toSet()
+
+            var query = (StudentProfiles innerJoin Users)
+                .select { Users.role eq "STUDENT" }
+
+            branchFilter?.let { b ->
+                if (b.isNotBlank() && b != "All Branches") {
+                    query = query.andWhere { StudentProfiles.branch eq b }
+                }
+            }
+
+            minCgpaFilter?.let { cgpa ->
+                if (cgpa > 0) {
+                    query = query.andWhere { StudentProfiles.cgpa greaterEq cgpa }
+                }
+            }
+
+            query.map { row ->
+                val userId = row[Users.id]
+                val profileId = row[StudentProfiles.id]
+                
+                val skills = (StudentSkills innerJoin Skills)
+                    .select { StudentSkills.studentProfileId eq profileId }
+                    .map { r -> r[Skills.name] }
+
+                val isPlaced = placedStudentIds.contains(userId)
+                val status = if (isPlaced) "PLACED" else "UNPLACED"
+
+                OfficerStudentResponse(
+                    userId = userId,
+                    name = row[Users.name],
+                    email = row[Users.email],
+                    semester = row[StudentProfiles.semester],
+                    branch = row[StudentProfiles.branch],
+                    cgpa = row[StudentProfiles.cgpa],
+                    skills = skills,
+                    placementStatus = status
+                )
+            }.filter { student ->
+                if (statusFilter.isNullOrBlank() || statusFilter == "ALL") {
+                    true
+                } else {
+                    student.placementStatus.equals(statusFilter, ignoreCase = true)
+                }
+            }
+        }
+    }
 }

@@ -149,6 +149,14 @@ public interface SmartCampusApi {
         @GET("officer/stats")
         Call<JsonObject> getOfficerStats(@Header("Authorization") String token);
 
+        @GET("officer/students")
+        Call<List<JsonObject>> searchStudents(
+                @Header("Authorization") String token,
+                @Query("branch") String branch,
+                @Query("minCgpa") Float minCgpa,
+                @Query("status") String status
+        );
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);
