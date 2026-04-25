@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter
 
 class PlacementOfficerService {
 
+    private val notificationService = NotificationService()
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     fun createDrive(userId: Int, request: PlacementDriveRequest): MessageResponse {
@@ -26,6 +27,14 @@ class PlacementOfficerService {
                 it[createdAt] = LocalDateTime.now()
             }
         }
+        
+        notificationService.createNotification(
+            userId = userId,
+            title = "Drive Created: ${request.companyName}",
+            message = "New placement drive for ${request.companyName} added successfully.",
+            type = "DRIVE_CREATED"
+        )
+
         return MessageResponse("Placement drive created successfully")
     }
 
@@ -219,7 +228,7 @@ class PlacementOfficerService {
         }
     }
 
-    fun sendMassNotification(request: MassNotificationRequest): MessageResponse {
+    fun sendMassNotification(userId: Int, request: MassNotificationRequest): MessageResponse {
         return transaction {
             var targetUsers = Users.select { Users.role eq "STUDENT" }.map { it[Users.id] }.toSet()
 
@@ -251,14 +260,22 @@ class PlacementOfficerService {
 
             val now = LocalDateTime.now()
             
-            Notifications.batchInsert(targetUsers) { userId ->
-                this[Notifications.userId] = userId
+            Notifications.batchInsert(targetUsers) { targetId ->
+                this[Notifications.userId] = targetId
                 this[Notifications.title] = request.title
                 this[Notifications.message] = request.message
                 this[Notifications.type] = request.type
                 this[Notifications.isRead] = false
                 this[Notifications.createdAt] = now
             }
+
+            // Create notification for officer
+            notificationService.createNotification(
+                userId = userId,
+                title = "Mass Announcement Sent",
+                message = "Broadcasted '${request.title}' to ${targetUsers.size} students.",
+                type = "ANNOUNCEMENT_SENT"
+            )
 
             MessageResponse("Notification sent successfully to ${targetUsers.size} students.", true)
         }
