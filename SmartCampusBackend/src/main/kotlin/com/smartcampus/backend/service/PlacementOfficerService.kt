@@ -117,20 +117,27 @@ class PlacementOfficerService {
         return transaction {
             val totalStudents = Users.select { Users.role eq "STUDENT" }.count().toInt()
             
-            val applications = JobApplications.selectAll()
-            val totalOffers = applications.count().toInt()
-            
-            // To find placed students, we get distinct studentIds where status is "SELECTED"
-            val placedStudentIds = JobApplications
+            // Get all successful applications with their associated job data
+            val successfulApps = (JobApplications innerJoin Jobs)
                 .select { JobApplications.status eq "SELECTED" }
-                .map { it[JobApplications.studentId] }
-                .distinct()
             
-            val placedStudents = placedStudentIds.size
-            val unplacedStudents = totalStudents - placedStudents
+            val totalOffers = successfulApps.count().toInt()
+            val placedStudentIds = successfulApps.map { it[JobApplications.studentId] }.distinct()
+            val placedStudentsCount = placedStudentIds.size
+            val unplacedStudents = totalStudents - placedStudentsCount
 
-            val highestPackage = "24 LPA"
-            val averagePackage = "8.5 LPA"
+            // Parse and calculate packages
+            val packages = successfulApps.mapNotNull { row ->
+                val pkgStr = row[Jobs.salaryPackage] ?: return@mapNotNull null
+                // Extract numeric value from string like "12 LPA" or "₹ 8.5"
+                pkgStr.replace(Regex("[^0-9.]"), "").toDoubleOrNull()
+            }
+
+            val highestPkgVal = packages.maxOrNull() ?: 0.0
+            val averagePkgVal = if (packages.isNotEmpty()) packages.average() else 0.0
+            
+            val highestPackage = if (highestPkgVal > 0) "%.1f LPA".format(highestPkgVal) else "N/A"
+            val averagePackage = if (averagePkgVal > 0) "%.1f LPA".format(averagePkgVal) else "N/A"
             
             val departmentPlacements = mutableMapOf<String, Int>()
             if (placedStudentIds.isNotEmpty()) {
@@ -163,7 +170,7 @@ class PlacementOfficerService {
 
             OfficerDashboardResponse(
                 totalStudents = totalStudents,
-                placedStudents = placedStudents,
+                placedStudents = placedStudentsCount,
                 unplacedStudents = unplacedStudents,
                 highestPackage = highestPackage,
                 averagePackage = averagePackage,
