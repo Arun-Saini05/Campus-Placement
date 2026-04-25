@@ -160,6 +160,9 @@ public interface SmartCampusApi {
         @POST("officer/notifications/mass")
         Call<JsonObject> sendMassNotification(@Header("Authorization") String token, @Body Map<String, Object> body);
 
+        @DELETE("officer/drives/{driveId}")
+        Call<JsonObject> deleteDrive(@Header("Authorization") String token, @Path("driveId") int driveId);
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);

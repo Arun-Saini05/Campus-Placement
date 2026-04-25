@@ -280,4 +280,27 @@ class PlacementOfficerService {
             MessageResponse("Notification sent successfully to ${targetUsers.size} students.", true)
         }
     }
+
+    fun deleteDrive(driveId: Int, userId: Int): MessageResponse {
+        return transaction {
+            val drive = PlacementDrives.select { PlacementDrives.id eq driveId }.singleOrNull()
+                ?: return@transaction MessageResponse("Drive not found", false)
+            
+            val company = drive[PlacementDrives.companyName]
+            
+            // Delete associated applications first
+            JobApplications.deleteWhere { jobId eq driveId }
+            
+            PlacementDrives.deleteWhere { id eq driveId }
+            
+            notificationService.createNotification(
+                userId = userId,
+                title = "Drive Removed: $company",
+                message = "The placement drive for $company has been cancelled and removed.",
+                type = "DRIVE_DELETED"
+            )
+            
+            MessageResponse("Drive removed successfully", true)
+        }
+    }
 }

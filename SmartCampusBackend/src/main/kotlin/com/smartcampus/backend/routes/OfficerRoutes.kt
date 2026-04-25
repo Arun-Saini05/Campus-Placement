@@ -73,6 +73,19 @@ fun Route.officerRoutes() {
                 }
             }
 
+            // Delete a drive
+            delete("/drives/{driveId}") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val driveId = call.parameters["driveId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid drive ID")
+                    val response = officerService.deleteDrive(driveId, userId)
+                    call.respond(if (response.success) HttpStatusCode.OK else HttpStatusCode.BadRequest, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
             // Mass Notification System
             post("/notifications/mass") {
                 try {

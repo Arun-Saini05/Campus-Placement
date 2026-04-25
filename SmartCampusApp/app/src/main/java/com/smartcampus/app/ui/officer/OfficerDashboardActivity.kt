@@ -284,13 +284,23 @@ class OfficerDashboardActivity : AppCompatActivity() {
                 setPadding(dp(4), 0, 0, dp(8))
             })
         } else {
-            notifications.take(5).forEach { n ->
+            // Filter to only show the latest DRIVE_DELETED if multiple exist consecutively or in the list
+            var hasShownDeletion = false
+            val filteredNotifications = notifications.filter { n ->
+                val type = n.get("type")?.asString ?: ""
+                if (type == "DRIVE_DELETED") {
+                    if (hasShownDeletion) false else { hasShownDeletion = true; true }
+                } else true
+            }
+
+            filteredNotifications.take(5).forEach { n ->
                 val type = n.get("type")?.asString ?: ""
                 val icon = when(type) { 
                     "DRIVE_CREATED" -> "🎉"
                     "ANNOUNCEMENT_SENT" -> "📢"
                     "STUDENT_PLACED" -> "🎯"
                     "STATS_UPDATED" -> "📊"
+                    "DRIVE_DELETED" -> "🗑️"
                     else -> "📌" 
                 }
                 val row = LinearLayout(this).apply { 
@@ -360,13 +370,48 @@ class OfficerDashboardActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { bottomMargin = dp(12) }
         }
         val outer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        
+        // Add Close/Remove icon in the top right using a FrameLayout wrapper for the top row
+        val headerWrapper = FrameLayout(this)
         val topRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val circleColor = listOf("#6C63FF", "#00BCD4", "#F0883E", "#3FB950", "#58A6FF")[id % 5]
         topRow.addView(TextView(this).apply { text = company.first().uppercase(); textSize = 16f; setTextColor(Color.WHITE); setTypeface(typeface, Typeface.BOLD); gravity = Gravity.CENTER; layoutParams = LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginEnd = dp(12) }; background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor(circleColor)) } })
         val titleCol = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f) }
         titleCol.addView(TextView(this).apply { text = if (desc.isNotEmpty()) desc else company; textSize = 15f; setTextColor(Color.WHITE); setTypeface(typeface, Typeface.BOLD); maxLines = 2 })
         titleCol.addView(TextView(this).apply { text = company; textSize = 12f; setTextColor(Color.parseColor("#8B949E")) })
-        topRow.addView(titleCol); outer.addView(topRow)
+        topRow.addView(titleCol)
+        
+        headerWrapper.addView(topRow)
+        
+        // The Cross Icon
+        val ivRemove = TextView(this).apply {
+            text = "✕"; textSize = 14f; setTextColor(Color.parseColor("#8B949E"))
+            gravity = Gravity.CENTER; setTypeface(typeface, Typeface.BOLD)
+            layoutParams = FrameLayout.LayoutParams(dp(28), dp(28)).apply { gravity = Gravity.TOP or Gravity.END }
+            background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.parseColor("#21262D")) }
+        }
+        ivRemove.setOnClickListener {
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Remove Drive")
+                .setMessage("Are you sure you want to remove the placement drive for $company?")
+                .setPositiveButton("Remove") { _, _ ->
+                    ApiClient.getApi().deleteDrive(session.authToken, id).enqueue(object : Callback<JsonObject> {
+                        override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                            if (response.isSuccessful) {
+                                Toast.makeText(this@OfficerDashboardActivity, "Drive removed", Toast.LENGTH_SHORT).show()
+                                onResume()
+                            }
+                        }
+                        override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                            Toast.makeText(this@OfficerDashboardActivity, "Error removing drive", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+        headerWrapper.addView(ivRemove)
+        outer.addView(headerWrapper)
         
         val details = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(12), 0, dp(8)) }
         details.addView(TextView(this).apply { text = "💰 ₹${drive.get("salaryPackage")?.asString ?: ""}"; textSize = 12f; setTextColor(Color.parseColor("#00E5FF")); layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { marginEnd = dp(16) } })
@@ -374,9 +419,19 @@ class OfficerDashboardActivity : AppCompatActivity() {
         outer.addView(details)
         
         val btnRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; setPadding(0, dp(8), 0, 0) }
-        val btn = MaterialButton(this).apply { text = "Track Drive"; textSize = 11f; isAllCaps = false; cornerRadius = dp(16); setBackgroundColor(Color.parseColor("#00BCD4")); setTextColor(Color.WHITE); layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(36)) }
-        btn.setOnClickListener { val intent = Intent(this, EligibleStudentsActivity::class.java); intent.putExtra("driveId", id); intent.putExtra("companyName", company); startActivity(intent) }
-        btnRow.addView(btn); outer.addView(btnRow); card.addView(outer); layoutDrives.addView(card)
+        val btnTrack = MaterialButton(this).apply {
+            text = "Track Drive Details"; textSize = 11f; isAllCaps = false; cornerRadius = dp(16)
+            setBackgroundColor(Color.parseColor("#3FB950")); setTextColor(Color.WHITE)
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dp(38))
+        }
+        btnTrack.setOnClickListener {
+            val intent = Intent(this, EligibleStudentsActivity::class.java)
+            intent.putExtra("driveId", id); intent.putExtra("companyName", company)
+            startActivity(intent)
+        }
+
+        btnRow.addView(btnTrack)
+        outer.addView(btnRow); card.addView(outer); layoutDrives.addView(card)
     }
 
     private fun addLogoutButton() {
