@@ -293,7 +293,8 @@ class OfficerDashboardActivity : AppCompatActivity() {
                 } else true
             }
 
-            filteredNotifications.take(5).forEach { n ->
+            // Show only the latest 2 updates as requested
+            filteredNotifications.take(2).forEach { n ->
                 val type = n.get("type")?.asString ?: ""
                 val icon = when(type) { 
                     "DRIVE_CREATED" -> "🎉"
