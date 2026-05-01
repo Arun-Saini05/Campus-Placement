@@ -170,6 +170,18 @@ public interface SmartCampusApi {
         @GET("recruiter/resume/{studentId}")
         Call<JsonObject> viewStudentResume(@Header("Authorization") String token, @Path("studentId") int studentId);
 
+        @GET("recruiter/analytics")
+        Call<JsonObject> getRecruiterAnalytics(@Header("Authorization") String token);
+
+        @GET("recruiter/profile")
+        Call<JsonObject> getRecruiterProfile(@Header("Authorization") String token);
+
+        @PUT("recruiter/profile")
+        Call<JsonObject> updateRecruiterProfile(@Header("Authorization") String token, @Body Map<String, Object> body);
+
+        @POST("recruiter/interview")
+        Call<JsonObject> scheduleInterview(@Header("Authorization") String token, @Body Map<String, Object> body);
+
         // ========== ADMIN ==========
         @GET("admin/users")
         Call<List<JsonObject>> getAllUsers(@Header("Authorization") String token);

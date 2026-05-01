@@ -11,7 +11,6 @@ import com.smartcampus.app.databinding.ActivityMainBinding
 class AdminDashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private lateinit var adminService: AdminService
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,18 +18,6 @@ class AdminDashboardActivity : AppCompatActivity() {
         // Setup ViewBinding
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Initialize Services
-        
-        adminService = AdminService()
-        
-        // Add Sample Data
-        adminService.addCollege("Sample Tech Institute", "Sample City")
-        adminService.addRecruitmentOfficer("Jane Placement", "jane@tech.com", "TechCorp")
-        adminService.addStudent("John Doe", "john@example.com", "Computer Science")
-        adminService.addJob("Software Engineer", "TechCorp", "Bangalore", "12 LPA")
-        adminService.addCompany("TechCorp", "IT/Software", "Bangalore")
-        adminService.addApplication("John Doe", "Software Engineer", "Applied")
 
         setupListeners()
     }
@@ -41,13 +28,23 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun updateDashboardStats() {
-        val totalStudents = adminService.viewAllStudents().size
-        val totalJobs = adminService.viewAllJobs().size
-        val totalApps = adminService.viewAllApplications().size
+        val token = "Bearer " + com.smartcampus.app.utils.SessionManager(this).authToken
+        com.smartcampus.app.api.ApiClient.getApi().getSystemStats(token).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    binding.tvTotalStudents.text = (stats.get("totalStudents")?.asInt ?: 0).toString()
+                    binding.tvTotalJobs.text = (stats.get("totalJobs")?.asInt ?: 0).toString()
+                    binding.tvTotalApps.text = (stats.get("totalApplications")?.asInt ?: 0).toString()
+                } else {
+                    Toast.makeText(this@AdminDashboardActivity, "Failed to load stats", Toast.LENGTH_SHORT).show()
+                }
+            }
 
-        binding.tvTotalStudents.text = totalStudents.toString()
-        binding.tvTotalJobs.text = totalJobs.toString()
-        binding.tvTotalApps.text = totalApps.toString()
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                Toast.makeText(this@AdminDashboardActivity, "Network error", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
 

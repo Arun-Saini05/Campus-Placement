@@ -4,17 +4,23 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
-import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.smartcampus.app.R
-import com.smartcampus.app.ui.auth.LoginActivity
-import com.smartcampus.app.utils.SessionManager
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
+import com.google.gson.JsonObject
+import com.smartcampus.app.R
+import com.smartcampus.app.api.ApiClient
+import com.smartcampus.app.ui.auth.LoginActivity
+import com.smartcampus.app.utils.SessionManager
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class RecruiterDashboardActivity : AppCompatActivity() {
     private lateinit var session: SessionManager
@@ -40,8 +46,7 @@ class RecruiterDashboardActivity : AppCompatActivity() {
         addHeaderSection()
         addQuickActions()
         
-        // Render mock stats to ensure consistent UI formatting for now
-        addStatsGrid(12, 450, 15, 8)
+        loadDynamicAnalytics()
         
         addLogoutButton()
     }
@@ -98,6 +103,31 @@ class RecruiterDashboardActivity : AppCompatActivity() {
         row.addView(btnSearch)
         row.addView(btnJobs)
         container.addView(row, 2)
+    }
+
+    private fun loadDynamicAnalytics() {
+        val token = "Bearer ${session.authToken}"
+        ApiClient.getApi().getRecruiterAnalytics(token).enqueue(object : Callback<JsonObject> {
+            override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val stats = response.body()!!
+                    val jobsPosted = stats.get("totalJobsPosted")?.asInt ?: 0
+                    val appsReceived = stats.get("totalApplicationsReceived")?.asInt ?: 0
+                    val interviews = stats.get("totalInterviewsScheduled")?.asInt ?: 0
+                    val hires = stats.get("totalHires")?.asInt ?: 0
+                    
+                    layoutStats.removeAllViews()
+                    addStatsGrid(jobsPosted, appsReceived, interviews, hires)
+                } else {
+                    Toast.makeText(this@RecruiterDashboardActivity, "Failed to load analytics", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                Log.e("RecruiterDashboard", "API Error", t)
+                Toast.makeText(this@RecruiterDashboardActivity, "Network error", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun addStatsGrid(jobsPosted: Int, appsReceived: Int, interviews: Int, hires: Int) {
