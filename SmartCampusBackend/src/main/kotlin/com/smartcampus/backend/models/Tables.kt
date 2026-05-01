@@ -107,6 +107,22 @@ object TrendingSkills : Table("trending_skills") {
     override val primaryKey = PrimaryKey(id)
 }
 
+// ==================== RECRUITER PROFILES ====================
+object RecruiterProfiles : Table("recruiter_profiles") {
+    val id = integer("id").autoIncrement()
+    val userId = integer("user_id").references(Users.id).uniqueIndex()
+    val companyName = varchar("company_name", 200)
+    val companyLogoUrl = varchar("company_logo_url", 500).nullable()
+    val website = varchar("website", 200).nullable()
+    val industry = varchar("industry", 100).nullable()
+    val contactName = varchar("contact_name", 100).nullable()
+    val contactDesignation = varchar("contact_designation", 100).nullable()
+    val createdAt = datetime("created_at")
+    val updatedAt = datetime("updated_at")
+
+    override val primaryKey = PrimaryKey(id)
+}
+
 // ==================== JOBS ====================
 object Jobs : Table("jobs") {
     val id = integer("id").autoIncrement()
@@ -132,11 +148,15 @@ object JobApplications : Table("job_applications") {
     val studentId = integer("student_id").references(Users.id)
     val resumeUrl = varchar("resume_url", 500).nullable()
     val status = varchar("status", 30).default("APPLIED") // APPLIED, SHORTLISTED, INTERVIEW_SCHEDULED, SELECTED, REJECTED
+    val interviewDate = datetime("interview_date").nullable()
+    val interviewLink = varchar("interview_link", 500).nullable()
+    val feedback = text("feedback").nullable()
     val appliedAt = datetime("applied_at")
     val updatedAt = datetime("updated_at")
 
     override val primaryKey = PrimaryKey(id)
 }
+
 
 // ==================== RESUME DATA ====================
 object ResumeData : Table("resume_data") {

@@ -68,6 +68,19 @@ fun Route.jobRoutes() {
                 }
             }
 
+            // Get applications for a specific job (Recruiter/Officer)
+            get("/{jobId}/applications") {
+                try {
+                    val jobId = call.parameters["jobId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid job ID")
+                    val applications = jobService.getApplicationsForJob(jobId)
+                    call.respond(HttpStatusCode.OK, applications)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+
             // Post a new job (Recruiter/Officer)
             post {
                 try {
@@ -113,6 +126,32 @@ fun Route.jobRoutes() {
                     val status = call.request.queryParameters["status"]
                         ?: throw IllegalArgumentException("Status required")
                     val response = jobService.updateApplicationStatus(applicationId, status)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+            // Delete a job
+            delete("/{jobId}") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val jobId = call.parameters["jobId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid job ID")
+                    val response = jobService.deleteJob(userId, jobId)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+            // Toggle job vacancy status
+            put("/{jobId}/toggle-status") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val jobId = call.parameters["jobId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid job ID")
+                    val response = jobService.toggleJobStatus(userId, jobId)
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))

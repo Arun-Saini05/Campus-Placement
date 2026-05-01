@@ -286,6 +286,26 @@ data class NotificationResponse(
 
 // ==================== RECRUITER DTOs ====================
 @Serializable
+data class RecruiterProfileRequest(
+    val companyName: String,
+    val website: String? = null,
+    val industry: String? = null,
+    val contactName: String? = null,
+    val contactDesignation: String? = null
+)
+
+@Serializable
+data class RecruiterProfileResponse(
+    val userId: Int,
+    val companyName: String,
+    val companyLogoUrl: String?,
+    val website: String?,
+    val industry: String?,
+    val contactName: String?,
+    val contactDesignation: String?
+)
+
+@Serializable
 data class CandidateSearchRequest(
     val skill: String? = null,
     val branch: String? = null,
@@ -304,6 +324,24 @@ data class CandidateResponse(
     val skills: List<String>,
     val resumeUrl: String?
 )
+
+@Serializable
+data class RecruiterAnalyticsResponse(
+    val totalJobsPosted: Int,
+    val totalApplicationsReceived: Int,
+    val totalInterviewsScheduled: Int,
+    val totalHires: Int,
+    val applicationsPerJob: Map<String, Int> = emptyMap()
+)
+
+@Serializable
+data class InterviewScheduleRequest(
+    val applicationId: Int,
+    val interviewDate: String, // ISO datetime
+    val interviewLink: String? = null,
+    val feedback: String? = null
+)
+
 
 // ==================== ADMIN DTOs ====================
 @Serializable

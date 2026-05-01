@@ -14,7 +14,7 @@ class JobService {
 
     fun getAllJobs(filter: JobFilterRequest? = null): List<JobResponse> {
         return transaction {
-            var query = Jobs.select { Jobs.isActive eq true }
+            var query = Jobs.selectAll() // Show all jobs, even inactive ones, so applicants see them "blurred"
 
             filter?.let { f ->
                 f.location?.let { loc ->
@@ -140,4 +140,58 @@ class JobService {
         }
         return MessageResponse("Application status updated to $status")
     }
+
+    fun deleteJob(userId: Int, jobId: Int): MessageResponse {
+        return transaction {
+            val job = Jobs.select { (Jobs.id eq jobId) and (Jobs.postedBy eq userId) }.singleOrNull()
+                ?: throw IllegalArgumentException("Job not found or unauthorized")
+            
+            // Delete applications first due to foreign key
+            JobApplications.deleteWhere { JobApplications.jobId eq jobId }
+            Jobs.deleteWhere { Jobs.id eq jobId }
+            MessageResponse("Job deleted successfully")
+        }
+    }
+
+    fun toggleJobStatus(userId: Int, jobId: Int): MessageResponse {
+        return transaction {
+            val job = Jobs.select { (Jobs.id eq jobId) and (Jobs.postedBy eq userId) }.singleOrNull()
+                ?: throw IllegalArgumentException("Job not found or unauthorized")
+            
+            val newStatus = !job[Jobs.isActive]
+            Jobs.update({ Jobs.id eq jobId }) {
+                it[isActive] = newStatus
+            }
+            MessageResponse("Job status updated to ${if (newStatus) "Vacant" else "Not Vacant"}")
+        }
+    }
+
+    fun getApplicationsForJob(jobId: Int): List<CandidateResponse> {
+        return transaction {
+            (JobApplications innerJoin Users)
+                .select { JobApplications.jobId eq jobId }
+                .map { row ->
+                    val studentUserId = row[Users.id]
+                    val profile = StudentProfiles.select { StudentProfiles.userId eq studentUserId }.singleOrNull()
+                    val profileId = profile?.get(StudentProfiles.id)
+                    val skills = if (profileId != null) {
+                        (StudentSkills innerJoin Skills)
+                            .select { StudentSkills.studentProfileId eq profileId }
+                            .map { r -> r[Skills.name] }
+                    } else emptyList()
+
+                    CandidateResponse(
+                        userId = row[Users.id],
+                        name = row[Users.name],
+                        email = row[Users.email],
+                        semester = profile?.get(StudentProfiles.semester),
+                        branch = profile?.get(StudentProfiles.branch),
+                        cgpa = profile?.get(StudentProfiles.cgpa),
+                        skills = skills,
+                        resumeUrl = row[JobApplications.resumeUrl]
+                    )
+                }
+        }
+    }
 }
+
