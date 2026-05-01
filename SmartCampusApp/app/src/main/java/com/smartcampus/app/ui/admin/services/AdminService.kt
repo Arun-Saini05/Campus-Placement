@@ -1,12 +1,12 @@
-package com.campusplacement.admin.services
+package com.smartcampus.app.ui.admin.services
 
-import com.campusplacement.admin.models.College
-import com.campusplacement.admin.models.RecruitmentOfficer
-import com.campusplacement.admin.models.Student
-import com.campusplacement.admin.models.Job
-import com.campusplacement.admin.models.Company
-import com.campusplacement.admin.models.Application
-import com.campusplacement.admin.repositories.AdminRepository
+import com.smartcampus.app.ui.admin.models.College
+import com.smartcampus.app.ui.admin.models.RecruitmentOfficer
+import com.smartcampus.app.ui.admin.models.Student
+import com.smartcampus.app.ui.admin.models.Job
+import com.smartcampus.app.ui.admin.models.Company
+import com.smartcampus.app.ui.admin.models.Application
+import com.smartcampus.app.ui.admin.repositories.AdminRepository
 
 class AdminService(private val repository: AdminRepository = AdminRepository) {
 

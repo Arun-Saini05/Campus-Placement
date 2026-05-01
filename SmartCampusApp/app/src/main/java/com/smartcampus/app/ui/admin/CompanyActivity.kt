@@ -1,4 +1,4 @@
-package com.campusplacement.admin
+package com.smartcampus.app.ui.admin
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -12,9 +12,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.campusplacement.admin.databinding.ActivityCompanyListBinding
-import com.campusplacement.admin.models.Company
-import com.campusplacement.admin.services.AdminService
+import com.smartcampus.app.databinding.ActivityCompanyListBinding
+import com.smartcampus.app.ui.admin.models.Company
+import com.smartcampus.app.ui.admin.services.AdminService
 
 class CompanyActivity : AppCompatActivity() {
 

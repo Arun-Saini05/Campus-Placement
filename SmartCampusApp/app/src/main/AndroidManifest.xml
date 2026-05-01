@@ -70,6 +70,12 @@
 
         <!-- Admin -->
         <activity android:name=".ui.admin.AdminDashboardActivity" />
+        <activity android:name=".ui.admin.CollegeActivity" />
+        <activity android:name=".ui.admin.CompanyActivity" />
+        <activity android:name=".ui.admin.JobActivity" />
+        <activity android:name=".ui.admin.OfficerActivity" />
+        <activity android:name=".ui.admin.StudentActivity" />
+        <activity android:name=".ui.admin.ApplicationActivity" />
 
         <!-- Notifications -->
         <activity android:name=".ui.notifications.NotificationCenterActivity" />

@@ -1,4 +1,4 @@
-package com.campusplacement.admin
+package com.smartcampus.app.ui.admin
 
 import android.os.Bundle
 import android.text.InputType
@@ -13,9 +13,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.campusplacement.admin.databinding.ActivityJobListBinding
-import com.campusplacement.admin.models.Job
-import com.campusplacement.admin.services.AdminService
+import com.smartcampus.app.databinding.ActivityJobListBinding
+import com.smartcampus.app.ui.admin.models.Job
+import com.smartcampus.app.ui.admin.services.AdminService
 
 class JobActivity : AppCompatActivity() {
 

@@ -1,4 +1,4 @@
-package com.campusplacement.admin.models
+package com.smartcampus.app.ui.admin.models
 
 data class Application(
     val id: Int,

@@ -1,11 +1,11 @@
-package com.campusplacement.admin.repositories
+package com.smartcampus.app.ui.admin.repositories
 
-import com.campusplacement.admin.models.College
-import com.campusplacement.admin.models.RecruitmentOfficer
-import com.campusplacement.admin.models.Student
-import com.campusplacement.admin.models.Job
-import com.campusplacement.admin.models.Company
-import com.campusplacement.admin.models.Application
+import com.smartcampus.app.ui.admin.models.College
+import com.smartcampus.app.ui.admin.models.RecruitmentOfficer
+import com.smartcampus.app.ui.admin.models.Student
+import com.smartcampus.app.ui.admin.models.Job
+import com.smartcampus.app.ui.admin.models.Company
+import com.smartcampus.app.ui.admin.models.Application
 
 object AdminRepository {
     private val colleges = mutableListOf<College>()

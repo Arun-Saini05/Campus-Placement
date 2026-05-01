@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/bg_dark"
-    tools:context=".MainActivity">
+    tools:context=".ui.admin.ui.admin.AdminDashboardActivity">
 
     <TextView
         android:id="@+id/tvTitle"
@@ -21,15 +21,13 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Analytics Dashboard Card -->
-    <androidx.cardview.widget.CardView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardAnalytics"
+        style="@style/AppCard"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="24dp"
         android:layout_marginTop="24dp"
-        app:cardBackgroundColor="@color/bg_surface"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="4dp"
         app:layout_constraintTop_toBottomOf="@id/tvTitle">
 
         <LinearLayout
@@ -112,7 +110,7 @@
             </LinearLayout>
 
         </LinearLayout>
-    </androidx.cardview.widget.CardView>
+    </com.google.android.material.card.MaterialCardView>
 
     <ScrollView
         android:layout_width="match_parent"
