@@ -81,12 +81,34 @@ class StudentService {
                 preferredRegion = profile?.get(StudentProfiles.preferredRegion),
                 about = profile?.get(StudentProfiles.about),
                 resumeUrl = profile?.get(StudentProfiles.resumeUrl),
+                placementStatus = profile?.get(StudentProfiles.placementStatus) ?: "UNPLACED",
                 skills = skills,
                 certifications = certifications,
                 projects = projects,
                 experiences = experiences
             )
         }
+    }
+
+    fun updatePlacementStatus(userId: Int, status: String): MessageResponse {
+        transaction {
+            val profile = StudentProfiles.select { StudentProfiles.userId eq userId }.singleOrNull()
+            if (profile != null) {
+                StudentProfiles.update({ StudentProfiles.userId eq userId }) {
+                    it[placementStatus] = status
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            } else {
+                // If profile doesn't exist, create it with this status
+                StudentProfiles.insert {
+                    it[StudentProfiles.userId] = userId
+                    it[placementStatus] = status
+                    it[createdAt] = LocalDateTime.now()
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            }
+        }
+        return MessageResponse("Placement status updated to $status")
     }
 
     fun updateProfile(userId: Int, request: StudentProfileRequest): MessageResponse {

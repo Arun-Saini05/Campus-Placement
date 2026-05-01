@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,22 +23,26 @@ class CollegeActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCollegeListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: CollegeAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCollegeListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = CollegeAdapter(
-            colleges = adminService.viewAllColleges(),
+            colleges = emptyList(),
             onEdit = { college -> showCollegeDialog(college) },
             onDelete = { college -> 
-                adminService.deleteCollege(college.id)
-                refreshList()
+                adminService.deleteCollege(token, college.id) { success ->
+                    if (success) refreshList()
+                }
             }
         )
 
@@ -46,11 +52,15 @@ class CollegeActivity : AppCompatActivity() {
         binding.fabAddCollege.setOnClickListener {
             showCollegeDialog(null)
         }
+        
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.colleges = adminService.viewAllColleges()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllColleges(token) { list ->
+            adapter.colleges = list
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showCollegeDialog(college: College?) {
@@ -77,11 +87,12 @@ class CollegeActivity : AppCompatActivity() {
                 val location = locationInput.text.toString()
                 if (name.isNotBlank() && location.isNotBlank()) {
                     if (college == null) {
-                        adminService.addCollege(name, location)
+                        adminService.addCollege(token, name, location) { success ->
+                            if (success) refreshList()
+                        }
                     } else {
-                        adminService.updateCollege(college.id, name, location)
+                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)

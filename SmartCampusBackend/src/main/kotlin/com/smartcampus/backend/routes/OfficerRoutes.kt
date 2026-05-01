@@ -73,6 +73,19 @@ fun Route.officerRoutes() {
                 }
             }
 
+            // Update student placement status
+            put("/students/{studentId}/status") {
+                try {
+                    val studentId = call.parameters["studentId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid student ID")
+                    val request = call.receive<PlacementStatusRequest>()
+                    val response = officerService.updateStudentStatus(studentId, request.status)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
             // Delete a drive
             delete("/drives/{driveId}") {
                 try {

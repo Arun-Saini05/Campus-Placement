@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,22 +23,26 @@ class OfficerActivity : AppCompatActivity() {
     private lateinit var binding: ActivityOfficerListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: OfficerAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityOfficerListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = OfficerAdapter(
-            officers = adminService.viewAllRecruitmentOfficers(),
+            officers = emptyList(),
             onEdit = { officer -> showOfficerDialog(officer) },
             onDelete = { officer -> 
-                adminService.deleteRecruitmentOfficer(officer.id)
-                refreshList()
+                adminService.deleteStudent(token, officer.id) { success -> // Officers are also users
+                    if (success) refreshList()
+                }
             }
         )
 
@@ -46,11 +52,15 @@ class OfficerActivity : AppCompatActivity() {
         binding.fabAddOfficer.setOnClickListener {
             showOfficerDialog(null)
         }
+        
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.officers = adminService.viewAllRecruitmentOfficers()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllRecruitmentOfficers(token) { list ->
+            adapter.officers = list
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showOfficerDialog(officer: RecruitmentOfficer?) {
@@ -83,11 +93,12 @@ class OfficerActivity : AppCompatActivity() {
                 val company = companyInput.text.toString()
                 if (name.isNotBlank() && email.isNotBlank() && company.isNotBlank()) {
                     if (officer == null) {
-                        adminService.addRecruitmentOfficer(name, email, company)
+                        adminService.addRecruitmentOfficer(token, name, email, company) { success ->
+                            if (success) refreshList()
+                        }
                     } else {
-                        adminService.updateRecruitmentOfficer(officer.id, name, email, company)
+                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)

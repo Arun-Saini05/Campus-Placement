@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View

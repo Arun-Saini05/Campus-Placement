@@ -23,7 +23,7 @@ class JobListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_job_list)
+        setContentView(R.layout.activity_job_list_student)
         session = SessionManager(this)
         loadJobs()
     }

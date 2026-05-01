@@ -163,6 +163,12 @@ public interface SmartCampusApi {
         @DELETE("officer/drives/{driveId}")
         Call<JsonObject> deleteDrive(@Header("Authorization") String token, @Path("driveId") int driveId);
 
+        @PUT("officer/students/{studentId}/status")
+        Call<JsonObject> updateStudentStatus(@Header("Authorization") String token, @Path("studentId") int studentId, @Body Map<String, String> body);
+
+        @PUT("student/placement-status")
+        Call<JsonObject> updatePlacementStatus(@Header("Authorization") String token, @Body Map<String, String> body);
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);
@@ -200,4 +206,26 @@ public interface SmartCampusApi {
 
         @GET("admin/stats")
         Call<JsonObject> getSystemStats(@Header("Authorization") String token);
+
+        @GET("admin/applications")
+        Call<JsonArray> getAllApplications(@Header("Authorization") String token);
+
+        // --- Admin Management ---
+        @GET("admin/colleges")
+        Call<JsonArray> getAllColleges(@Header("Authorization") String token);
+
+        @POST("admin/colleges")
+        Call<JsonObject> addCollege(@Header("Authorization") String token, @Body Map<String, String> body);
+
+        @DELETE("admin/colleges/{id}")
+        Call<JsonObject> deleteCollege(@Header("Authorization") String token, @Path("id") int id);
+
+        @GET("admin/companies")
+        Call<JsonArray> getAllCompanies(@Header("Authorization") String token);
+
+        @POST("admin/companies")
+        Call<JsonObject> addCompany(@Header("Authorization") String token, @Body Map<String, String> body);
+
+        @DELETE("admin/companies/{id}")
+        Call<JsonObject> deleteCompany(@Header("Authorization") String token, @Path("id") int id);
 }

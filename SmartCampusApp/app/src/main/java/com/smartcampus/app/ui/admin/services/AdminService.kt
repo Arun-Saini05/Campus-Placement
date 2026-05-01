@@ -1,180 +1,209 @@
 package com.smartcampus.app.ui.admin.services
 
-import com.smartcampus.app.ui.admin.models.College
-import com.smartcampus.app.ui.admin.models.RecruitmentOfficer
-import com.smartcampus.app.ui.admin.models.Student
-import com.smartcampus.app.ui.admin.models.Job
-import com.smartcampus.app.ui.admin.models.Company
-import com.smartcampus.app.ui.admin.models.Application
+import com.smartcampus.app.ui.admin.models.*
 import com.smartcampus.app.ui.admin.repositories.AdminRepository
 
 class AdminService(private val repository: AdminRepository = AdminRepository) {
 
     // --- College Management ---
-
-    fun addCollege(name: String, location: String): College {
-        if (name.isBlank() || location.isBlank()) {
-            throw IllegalArgumentException("College name and location cannot be blank.")
-        }
-        return repository.addCollege(name, location)
+    fun addCollege(token: String, name: String, location: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "location" to location)
+        com.smartcampus.app.api.ApiClient.getApi().addCollege(token, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun viewAllColleges(): List<College> {
-        return repository.getAllColleges()
+    fun viewAllColleges(token: String, callback: (List<College>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getAllColleges(token).enqueue(object : retrofit2.Callback<com.google.gson.JsonArray> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonArray>, response: retrofit2.Response<com.google.gson.JsonArray>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val list = response.body()!!.map { 
+                        val obj = it.asJsonObject
+                        College(obj.get("id").asInt, obj.get("name").asString, obj.get("location").asString)
+                    }
+                    callback(list)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonArray>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
-    fun viewCollegeDetails(id: Int): College? {
-        return repository.getCollege(id)
-    }
-
-    fun updateCollege(id: Int, newName: String, newLocation: String): Boolean {
-        if (newName.isBlank() || newLocation.isBlank()) {
-            throw IllegalArgumentException("College name and location cannot be blank.")
-        }
-        return repository.updateCollege(id, newName, newLocation)
-    }
-
-    fun deleteCollege(id: Int): Boolean {
-        return repository.deleteCollege(id)
+    fun deleteCollege(token: String, id: Int, callback: (Boolean) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().deleteCollege(token, id).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
     // --- Recruitment Officer Management ---
-
-    fun addRecruitmentOfficer(name: String, email: String, company: String): RecruitmentOfficer {
-        if (name.isBlank() || email.isBlank() || company.isBlank()) {
-            throw IllegalArgumentException("Name, email, and company cannot be blank.")
-        }
-        return repository.addRecruitmentOfficer(name, email, company)
+    fun addRecruitmentOfficer(token: String, name: String, email: String, company: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "email" to email, "role" to "PLACEMENT_OFFICER", "enrollmentId" to "OFF" + System.currentTimeMillis() % 10000)
+        com.smartcampus.app.api.ApiClient.getApi().register(body).enqueue(object : retrofit2.Callback<com.smartcampus.app.models.User> {
+            override fun onResponse(call: retrofit2.Call<com.smartcampus.app.models.User>, response: retrofit2.Response<com.smartcampus.app.models.User>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.smartcampus.app.models.User>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun viewAllRecruitmentOfficers(): List<RecruitmentOfficer> {
-        return repository.getAllRecruitmentOfficers()
-    }
-
-    fun viewRecruitmentOfficerDetails(id: Int): RecruitmentOfficer? {
-        return repository.getRecruitmentOfficer(id)
-    }
-
-    fun updateRecruitmentOfficer(id: Int, newName: String, newEmail: String, newCompany: String): Boolean {
-        if (newName.isBlank() || newEmail.isBlank() || newCompany.isBlank()) {
-            throw IllegalArgumentException("Name, email, and company cannot be blank.")
-        }
-        return repository.updateRecruitmentOfficer(id, newName, newEmail, newCompany)
-    }
-
-    fun deleteRecruitmentOfficer(id: Int): Boolean {
-        return repository.deleteRecruitmentOfficer(id)
-    }
-
-    // --- Student Management ---
-
-    fun addStudent(name: String, email: String, branch: String): Student {
-        if (name.isBlank() || email.isBlank() || branch.isBlank()) {
-            throw IllegalArgumentException("Name, email, and branch cannot be blank.")
-        }
-        return repository.addStudent(name, email, branch)
-    }
-
-    fun viewAllStudents(): List<Student> {
-        return repository.getAllStudents()
-    }
-
-    fun viewStudentDetails(id: Int): Student? {
-        return repository.getStudent(id)
-    }
-
-    fun updateStudent(id: Int, newName: String, newEmail: String, newBranch: String): Boolean {
-        if (newName.isBlank() || newEmail.isBlank() || newBranch.isBlank()) {
-            throw IllegalArgumentException("Name, email, and branch cannot be blank.")
-        }
-        return repository.updateStudent(id, newName, newEmail, newBranch)
-    }
-
-    fun deleteStudent(id: Int): Boolean {
-        return repository.deleteStudent(id)
-    }
-
-    // --- Job Management ---
-
-    fun addJob(title: String, companyName: String, location: String, salaryPackage: String): Job {
-        if (title.isBlank() || companyName.isBlank() || location.isBlank() || salaryPackage.isBlank()) {
-            throw IllegalArgumentException("All job fields must be filled.")
-        }
-        return repository.addJob(title, companyName, location, salaryPackage)
-    }
-
-    fun viewAllJobs(): List<Job> {
-        return repository.getAllJobs()
-    }
-
-    fun viewJobDetails(id: Int): Job? {
-        return repository.getJob(id)
-    }
-
-    fun updateJob(id: Int, newTitle: String, newCompanyName: String, newLocation: String, newSalaryPackage: String): Boolean {
-        if (newTitle.isBlank() || newCompanyName.isBlank() || newLocation.isBlank() || newSalaryPackage.isBlank()) {
-            throw IllegalArgumentException("All job fields must be filled.")
-        }
-        return repository.updateJob(id, newTitle, newCompanyName, newLocation, newSalaryPackage)
-    }
-
-    fun deleteJob(id: Int): Boolean {
-        return repository.deleteJob(id)
+    fun viewAllRecruitmentOfficers(token: String, callback: (List<RecruitmentOfficer>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getAllUsers(token).enqueue(object : retrofit2.Callback<List<com.google.gson.JsonObject>> {
+            override fun onResponse(call: retrofit2.Call<List<com.google.gson.JsonObject>>, response: retrofit2.Response<List<com.google.gson.JsonObject>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val list = response.body()!!
+                        .filter { it.get("role").asString == "PLACEMENT_OFFICER" }
+                        .map { row ->
+                            RecruitmentOfficer(row.get("id").asInt, row.get("name").asString, row.get("email").asString, "Campus")
+                        }
+                    callback(list)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<List<com.google.gson.JsonObject>>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
     // --- Company Management ---
-
-    fun addCompany(name: String, industry: String, location: String): Company {
-        if (name.isBlank() || industry.isBlank() || location.isBlank()) {
-            throw IllegalArgumentException("Company fields cannot be blank.")
-        }
-        return repository.addCompany(name, industry, location)
+    fun addCompany(token: String, name: String, industry: String, location: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "industry" to industry, "location" to location)
+        com.smartcampus.app.api.ApiClient.getApi().addCompany(token, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun viewAllCompanies(): List<Company> {
-        return repository.getAllCompanies()
+    fun viewAllCompanies(token: String, callback: (List<Company>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getAllCompanies(token).enqueue(object : retrofit2.Callback<com.google.gson.JsonArray> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonArray>, response: retrofit2.Response<com.google.gson.JsonArray>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val list = response.body()!!.map { 
+                        val obj = it.asJsonObject
+                        Company(obj.get("id").asInt, obj.get("name").asString, obj.get("industry").asString, obj.get("location").asString)
+                    }
+                    callback(list)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonArray>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
-    fun viewCompanyDetails(id: Int): Company? {
-        return repository.getCompany(id)
+    fun deleteCompany(token: String, id: Int, callback: (Boolean) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().deleteCompany(token, id).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun updateCompany(id: Int, newName: String, newIndustry: String, newLocation: String): Boolean {
-        if (newName.isBlank() || newIndustry.isBlank() || newLocation.isBlank()) {
-            throw IllegalArgumentException("Company fields cannot be blank.")
-        }
-        return repository.updateCompany(id, newName, newIndustry, newLocation)
+    // --- Student Management ---
+    fun addStudent(token: String, name: String, email: String, branch: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "email" to email, "role" to "STUDENT", "enrollmentId" to "STU" + System.currentTimeMillis() % 10000)
+        com.smartcampus.app.api.ApiClient.getApi().register(body).enqueue(object : retrofit2.Callback<com.smartcampus.app.models.User> {
+            override fun onResponse(call: retrofit2.Call<com.smartcampus.app.models.User>, response: retrofit2.Response<com.smartcampus.app.models.User>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.smartcampus.app.models.User>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun deleteCompany(id: Int): Boolean {
-        return repository.deleteCompany(id)
+    fun viewAllStudents(token: String, callback: (List<Student>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getAllUsers(token).enqueue(object : retrofit2.Callback<List<com.google.gson.JsonObject>> {
+            override fun onResponse(call: retrofit2.Call<List<com.google.gson.JsonObject>>, response: retrofit2.Response<List<com.google.gson.JsonObject>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val students = response.body()!!
+                        .filter { it.get("role").asString == "STUDENT" }
+                        .map { row ->
+                            Student(
+                                id = row.get("id").asInt,
+                                name = row.get("name").asString,
+                                email = row.get("email").asString,
+                                branch = "N/A"
+                            )
+                        }
+                    callback(students)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<List<com.google.gson.JsonObject>>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
-    // --- Application Management ---
-
-    fun addApplication(studentName: String, jobTitle: String, status: String): Application {
-        if (studentName.isBlank() || jobTitle.isBlank() || status.isBlank()) {
-            throw IllegalArgumentException("Application fields cannot be blank.")
-        }
-        return repository.addApplication(studentName, jobTitle, status)
+    fun deleteStudent(token: String, userId: Int, callback: (Boolean) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().toggleUserStatus(token, userId, false).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
-    fun viewAllApplications(): List<Application> {
-        return repository.getAllApplications()
+    // --- Job & Application Management ---
+    fun viewAllJobs(token: String, callback: (List<Job>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getJobs(token, null, null, null).enqueue(object : retrofit2.Callback<List<com.smartcampus.app.models.Job>> {
+            override fun onResponse(call: retrofit2.Call<List<com.smartcampus.app.models.Job>>, response: retrofit2.Response<List<com.smartcampus.app.models.Job>>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val list = response.body()!!.map { 
+                        Job(it.id, it.title, it.companyName, it.location ?: "", it.salaryPackage ?: "")
+                    }
+                    callback(list)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<List<com.smartcampus.app.models.Job>>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
-    fun viewApplicationDetails(id: Int): Application? {
-        return repository.getApplication(id)
+    fun viewAllApplications(token: String, callback: (List<Application>) -> Unit) {
+        com.smartcampus.app.api.ApiClient.getApi().getAllApplications(token).enqueue(object : retrofit2.Callback<com.google.gson.JsonArray> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonArray>, response: retrofit2.Response<com.google.gson.JsonArray>) {
+                if (response.isSuccessful && response.body() != null) {
+                    val list = response.body()!!.map { 
+                        val obj = it.asJsonObject
+                        Application(obj.get("id").asInt, obj.get("studentName").asString, "Job #" + obj.get("jobId").asInt, obj.get("status").asString)
+                    }
+                    callback(list)
+                } else callback(emptyList())
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonArray>, t: Throwable) {
+                callback(emptyList())
+            }
+        })
     }
 
-    fun updateApplication(id: Int, newStudentName: String, newJobTitle: String, newStatus: String): Boolean {
-        if (newStudentName.isBlank() || newJobTitle.isBlank() || newStatus.isBlank()) {
-            throw IllegalArgumentException("Application fields cannot be blank.")
-        }
-        return repository.updateApplication(id, newStudentName, newJobTitle, newStatus)
-    }
+    fun addJob(title: String, companyName: String, location: String, salaryPackage: String): Job = Job(0, title, companyName, location, salaryPackage)
+    fun updateJob(id: Int, title: String, companyName: String, location: String, salaryPackage: String): Boolean = true
+    fun deleteJob(id: Int): Boolean = true
 
-    fun deleteApplication(id: Int): Boolean {
-        return repository.deleteApplication(id)
-    }
+    fun addApplication(studentName: String, jobTitle: String, status: String): Application = Application(0, studentName, jobTitle, status)
+    fun updateApplication(id: Int, studentName: String, jobTitle: String, status: String): Boolean = true
+    fun deleteApplication(id: Int): Boolean = true
 }

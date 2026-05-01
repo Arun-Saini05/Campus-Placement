@@ -32,8 +32,13 @@ public class StudentProfile {
     private List<Project> projects;
     @SerializedName("experiences")
     private List<Experience> experiences;
+    @SerializedName("placementStatus")
+    private String placementStatus;
 
     // Getters
+    public String getPlacementStatus() {
+        return placementStatus != null ? placementStatus : "UNPLACED";
+    }
     public int getId() {
         return id;
     }
@@ -109,5 +114,9 @@ public class StudentProfile {
 
     public void setAbout(String about) {
         this.about = about;
+    }
+
+    public void setPlacementStatus(String placementStatus) {
+        this.placementStatus = placementStatus;
     }
 }

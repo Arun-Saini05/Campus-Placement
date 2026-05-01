@@ -49,10 +49,16 @@ data class StudentProfileResponse(
     val preferredRegion: String?,
     val about: String?,
     val resumeUrl: String?,
+    val placementStatus: String = "UNPLACED",
     val skills: List<SkillItem> = emptyList(),
     val certifications: List<CertificationItem> = emptyList(),
     val projects: List<ProjectItem> = emptyList(),
     val experiences: List<ExperienceItem> = emptyList()
+)
+
+@Serializable
+data class PlacementStatusRequest(
+    val status: String // PLACED, UNPLACED
 )
 
 // ==================== SKILL DTOs ====================

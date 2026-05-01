@@ -236,11 +236,45 @@ class StudentDirectoryActivity : AppCompatActivity() {
                 cornerRadius = dp(12).toFloat()
                 setColor(Color.parseColor(if (status == "PLACED") "#3FB950" else "#F0883E"))
             }
+            setOnClickListener {
+                showUpdateStatusDialog(student.get("userId").asInt, name, status)
+            }
         }
         outer.addView(badge)
 
         card.addView(outer)
         resultsContainer.addView(card)
+    }
+
+    private fun showUpdateStatusDialog(studentId: Int, name: String, currentStatus: String) {
+        val options = arrayOf("PLACED", "UNPLACED")
+        val checkedItem = if (currentStatus == "PLACED") 0 else 1
+        
+        androidx.appcompat.app.AlertDialog.Builder(this, android.R.style.Theme_DeviceDefault_Dialog_Alert)
+            .setTitle("Update Status: $name")
+            .setSingleChoiceItems(options, checkedItem) { dialog, which ->
+                val newStatus = options[which]
+                val body = HashMap<String, String>()
+                body["status"] = newStatus
+                
+                ApiClient.getApi().updateStudentStatus(session.authToken, studentId, body)
+                    .enqueue(object : Callback<JsonObject> {
+                        override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                            if (response.isSuccessful) {
+                                Toast.makeText(this@StudentDirectoryActivity, "Status updated!", Toast.LENGTH_SHORT).show()
+                                loadStudents()
+                            } else {
+                                Toast.makeText(this@StudentDirectoryActivity, "Update failed", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                            Toast.makeText(this@StudentDirectoryActivity, "Network error", Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun addEmptyState() {

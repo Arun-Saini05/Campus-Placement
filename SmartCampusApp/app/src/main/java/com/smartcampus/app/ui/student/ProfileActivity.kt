@@ -60,8 +60,33 @@ class ProfileActivity : AppCompatActivity() {
         findViewById<MaterialButton>(R.id.btnAddSkill).setOnClickListener { showAddSkillDialog() }
         findViewById<MaterialButton>(R.id.btnAddCert).setOnClickListener { showAddCertDialog() }
         findViewById<MaterialButton>(R.id.btnAddProject).setOnClickListener { showAddProjectDialog() }
+        
+        findViewById<MaterialButton>(R.id.btnToggleStatus).setOnClickListener { togglePlacementStatus() }
 
         loadProfile()
+    }
+
+    private fun togglePlacementStatus() {
+        val currentStatus = currentProfile?.placementStatus ?: "UNPLACED"
+        val newStatus = if (currentStatus == "PLACED") "UNPLACED" else "PLACED"
+        
+        val body = HashMap<String, String>()
+        body["status"] = newStatus
+        
+        ApiClient.getApi().updatePlacementStatus(session.authToken, body)
+            .enqueue(object : Callback<JsonObject> {
+                override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                    if (response.isSuccessful) {
+                        Toast.makeText(this@ProfileActivity, "Status updated to $newStatus", Toast.LENGTH_SHORT).show()
+                        loadProfile()
+                    } else {
+                        Toast.makeText(this@ProfileActivity, "Failed to update status", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                    Toast.makeText(this@ProfileActivity, "Network error", Toast.LENGTH_SHORT).show()
+                }
+            })
     }
 
     private fun loadProfile() {
@@ -89,6 +114,19 @@ class ProfileActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.tvCgpa).text = "CGPA: ${profile.cgpa ?: "-"}"
         findViewById<TextView>(R.id.tvRegion).text = profile.preferredRegion ?: "Not set"
         findViewById<TextView>(R.id.tvAbout).text = profile.about ?: "No about info"
+
+        val statusTv = findViewById<TextView>(R.id.tvPlacementStatus)
+        val toggleBtn = findViewById<MaterialButton>(R.id.btnToggleStatus)
+        val status = profile.placementStatus ?: "UNPLACED"
+        
+        statusTv.text = status
+        if (status == "PLACED") {
+            statusTv.setTextColor(resources.getColor(R.color.accent, null))
+            toggleBtn.text = "Mark as Unplaced"
+        } else {
+            statusTv.setTextColor(resources.getColor(R.color.error, null))
+            toggleBtn.text = "Mark as Placed"
+        }
 
         // Skills chips — closeable for deletion
         val chipGroup = findViewById<ChipGroup>(R.id.chipGroupSkills)

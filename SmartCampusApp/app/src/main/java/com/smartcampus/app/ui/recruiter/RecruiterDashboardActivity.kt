@@ -77,27 +77,44 @@ class RecruiterDashboardActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = dp(20) }
+            ).apply { 
+                topMargin = dp(8)
+                bottomMargin = dp(20) 
+            }
         }
 
         val btnSearch = MaterialButton(this).apply {
-            text = "🔍 Search Candidates"
+            text = "Find Talent"
             setBackgroundColor(Color.parseColor("#00BCD4"))
             setTextColor(Color.WHITE)
-            cornerRadius = dp(24)
-            textSize = 12f
+            cornerRadius = dp(12)
+            textSize = 11f
             isAllCaps = false
-            layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginEnd = dp(8) }
+            icon = resources.getDrawable(android.R.drawable.ic_menu_search, null)
+            iconSize = dp(18)
+            iconPadding = dp(8)
+            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            layoutParams = LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginEnd = dp(6) }
+            setOnClickListener {
+                Toast.makeText(this@RecruiterDashboardActivity, "Opening Candidate Search...", Toast.LENGTH_SHORT).show()
+            }
         }
 
         val btnJobs = MaterialButton(this).apply {
-            text = "💼 Post a Job"
+            text = "Post Job"
             setBackgroundColor(Color.parseColor("#3FB950"))
             setTextColor(Color.WHITE)
-            cornerRadius = dp(24)
-            textSize = 12f
+            cornerRadius = dp(12)
+            textSize = 11f
             isAllCaps = false
-            layoutParams = LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) }
+            icon = resources.getDrawable(android.R.drawable.ic_menu_add, null)
+            iconSize = dp(18)
+            iconPadding = dp(8)
+            iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
+            layoutParams = LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginStart = dp(6) }
+            setOnClickListener {
+                Toast.makeText(this@RecruiterDashboardActivity, "Opening Job Post Form...", Toast.LENGTH_SHORT).show()
+            }
         }
 
         row.addView(btnSearch)
@@ -106,7 +123,7 @@ class RecruiterDashboardActivity : AppCompatActivity() {
     }
 
     private fun loadDynamicAnalytics() {
-        val token = "Bearer ${session.authToken}"
+        val token = session.authToken
         ApiClient.getApi().getRecruiterAnalytics(token).enqueue(object : Callback<JsonObject> {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
                 if (response.isSuccessful && response.body() != null) {

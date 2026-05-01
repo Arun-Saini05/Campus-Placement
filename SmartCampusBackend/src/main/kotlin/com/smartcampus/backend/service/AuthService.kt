@@ -57,17 +57,25 @@ class AuthService(
     }
 
     fun login(request: LoginRequest): AuthResponse {
+        println("Login attempt for email: ${request.email}")
         val user = transaction {
             Users.select { Users.email eq request.email }.singleOrNull()
-        } ?: throw IllegalArgumentException("Invalid email or password")
+        } ?: run {
+            println("Login failed: User not found")
+            throw IllegalArgumentException("Invalid email or password")
+        }
 
         if (!BCrypt.checkpw(request.password, user[Users.password])) {
+            println("Login failed: Incorrect password")
             throw IllegalArgumentException("Invalid email or password")
         }
 
         if (!user[Users.isActive]) {
+            println("Login failed: Account inactive")
             throw IllegalArgumentException("Account is not active. Please contact admin.")
         }
+
+        println("Login successful for user: ${user[Users.email]} (Role: ${user[Users.role]})")
 
         val token = generateToken(user[Users.id], user[Users.email], user[Users.role])
 

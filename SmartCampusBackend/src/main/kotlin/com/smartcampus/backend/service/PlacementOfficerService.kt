@@ -183,12 +183,6 @@ class PlacementOfficerService {
 
     fun searchStudents(branchFilter: String?, minCgpaFilter: Float?, statusFilter: String?): List<OfficerStudentResponse> {
         return transaction {
-            // Get all placed student IDs
-            val placedStudentIds = JobApplications
-                .select { JobApplications.status eq "SELECTED" }
-                .map { it[JobApplications.studentId] }
-                .toSet()
-
             var query = (StudentProfiles innerJoin Users)
                 .select { Users.role eq "STUDENT" }
 
@@ -205,25 +199,20 @@ class PlacementOfficerService {
             }
 
             query.map { row ->
-                val userId = row[Users.id]
                 val profileId = row[StudentProfiles.id]
-                
                 val skills = (StudentSkills innerJoin Skills)
                     .select { StudentSkills.studentProfileId eq profileId }
                     .map { r -> r[Skills.name] }
 
-                val isPlaced = placedStudentIds.contains(userId)
-                val status = if (isPlaced) "PLACED" else "UNPLACED"
-
                 OfficerStudentResponse(
-                    userId = userId,
+                    userId = row[Users.id],
                     name = row[Users.name],
                     email = row[Users.email],
                     semester = row[StudentProfiles.semester],
                     branch = row[StudentProfiles.branch],
                     cgpa = row[StudentProfiles.cgpa],
                     skills = skills,
-                    placementStatus = status
+                    placementStatus = row[StudentProfiles.placementStatus]
                 )
             }.filter { student ->
                 if (statusFilter.isNullOrBlank() || statusFilter == "ALL") {
@@ -233,6 +222,26 @@ class PlacementOfficerService {
                 }
             }
         }
+    }
+
+    fun updateStudentStatus(studentId: Int, status: String): MessageResponse {
+        transaction {
+            val profile = StudentProfiles.select { StudentProfiles.userId eq studentId }.singleOrNull()
+            if (profile != null) {
+                StudentProfiles.update({ StudentProfiles.userId eq studentId }) {
+                    it[placementStatus] = status
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            } else {
+                StudentProfiles.insert {
+                    it[StudentProfiles.userId] = studentId
+                    it[placementStatus] = status
+                    it[createdAt] = LocalDateTime.now()
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            }
+        }
+        return MessageResponse("Student status updated to $status")
     }
 
     fun sendMassNotification(userId: Int, request: MassNotificationRequest): MessageResponse {

@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -28,7 +30,7 @@ class AdminDashboardActivity : AppCompatActivity() {
     }
 
     private fun updateDashboardStats() {
-        val token = "Bearer " + com.smartcampus.app.utils.SessionManager(this).authToken
+        val token = com.smartcampus.app.utils.SessionManager(this).authToken
         com.smartcampus.app.api.ApiClient.getApi().getSystemStats(token).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
             override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
                 if (response.isSuccessful && response.body() != null) {
@@ -73,5 +75,12 @@ class AdminDashboardActivity : AppCompatActivity() {
             startActivity(Intent(this, ApplicationActivity::class.java))
         }
 
+        binding.btnLogout.setOnClickListener {
+            com.smartcampus.app.utils.SessionManager(this).logout()
+            val intent = Intent(this, com.smartcampus.app.ui.auth.LoginActivity::class.java)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
     }
 }

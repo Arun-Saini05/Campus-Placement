@@ -30,6 +30,7 @@ object StudentProfiles : Table("student_profiles") {
     val about = text("about").nullable()
     val resumeUrl = varchar("resume_url", 500).nullable()
     val profileImageUrl = varchar("profile_image_url", 500).nullable()
+    val placementStatus = varchar("placement_status", 30).default("UNPLACED") // UNPLACED, PLACED
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 
@@ -221,6 +222,26 @@ object RoadmapProgress : Table("roadmap_progress") {
     val userId = integer("user_id").references(Users.id)
     val skillName = varchar("skill_name", 100)
     val stepName = varchar("step_name", 200)
+
+    override val primaryKey = PrimaryKey(id)
+}
+// ==================== COLLEGES ====================
+object Colleges : Table("colleges") {
+    val id = integer("id").autoIncrement()
+    val name = varchar("name", 200)
+    val location = varchar("location", 200)
+    val createdAt = datetime("created_at")
+
+    override val primaryKey = PrimaryKey(id)
+}
+
+// ==================== COMPANIES ====================
+object Companies : Table("companies") {
+    val id = integer("id").autoIncrement()
+    val name = varchar("name", 200)
+    val industry = varchar("industry", 200).nullable()
+    val location = varchar("location", 200).nullable()
+    val createdAt = datetime("created_at")
 
     override val primaryKey = PrimaryKey(id)
 }

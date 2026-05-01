@@ -38,6 +38,18 @@ fun Route.studentRoutes() {
                 }
             }
 
+            // Update placement status
+            put("/placement-status") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val request = call.receive<PlacementStatusRequest>()
+                    val response = studentService.updatePlacementStatus(userId, request.status)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
             // Add skill
             post("/skills") {
                 try {

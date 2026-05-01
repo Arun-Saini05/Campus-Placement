@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,22 +23,26 @@ class CompanyActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCompanyListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: CompanyAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCompanyListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = CompanyAdapter(
-            companies = adminService.viewAllCompanies(),
+            companies = emptyList(),
             onEdit = { company -> showCompanyDialog(company) },
             onDelete = { company -> 
-                adminService.deleteCompany(company.id)
-                refreshList()
+                adminService.deleteCompany(token, company.id) { success ->
+                    if (success) refreshList()
+                }
             }
         )
 
@@ -46,11 +52,15 @@ class CompanyActivity : AppCompatActivity() {
         binding.fabAddCompany.setOnClickListener {
             showCompanyDialog(null)
         }
+        
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.companies = adminService.viewAllCompanies()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllCompanies(token) { list ->
+            adapter.companies = list
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showCompanyDialog(company: Company?) {
@@ -83,11 +93,12 @@ class CompanyActivity : AppCompatActivity() {
                 val location = locationInput.text.toString()
                 if (name.isNotBlank() && industry.isNotBlank() && location.isNotBlank()) {
                     if (company == null) {
-                        adminService.addCompany(name, industry, location)
+                        adminService.addCompany(token, name, industry, location) { success ->
+                            if (success) refreshList()
+                        }
                     } else {
-                        adminService.updateCompany(company.id, name, industry, location)
+                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)

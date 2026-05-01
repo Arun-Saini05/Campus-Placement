@@ -1,5 +1,7 @@
 package com.smartcampus.app.ui.admin
 
+import com.smartcampus.app.R
+
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -21,22 +23,27 @@ class StudentActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStudentListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: StudentAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityStudentListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = StudentAdapter(
-            students = adminService.viewAllStudents(),
+            students = emptyList(),
             onEdit = { student -> showStudentDialog(student) },
             onDelete = { student -> 
-                adminService.deleteStudent(student.id)
-                refreshList()
+                adminService.deleteStudent(token, student.id) { success ->
+                    if (success) refreshList()
+                    else android.widget.Toast.makeText(this, "Failed to delete student", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         )
 
@@ -46,11 +53,15 @@ class StudentActivity : AppCompatActivity() {
         binding.fabAddStudent.setOnClickListener {
             showStudentDialog(null)
         }
+        
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.students = adminService.viewAllStudents()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllStudents(token) { students ->
+            adapter.students = students
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showStudentDialog(student: Student?) {
@@ -83,11 +94,13 @@ class StudentActivity : AppCompatActivity() {
                 val branch = branchInput.text.toString()
                 if (name.isNotBlank() && email.isNotBlank() && branch.isNotBlank()) {
                     if (student == null) {
-                        adminService.addStudent(name, email, branch)
+                        adminService.addStudent(token, name, email, branch) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to add student", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        adminService.updateStudent(student.id, name, email, branch)
+                        android.widget.Toast.makeText(this, "Update pending backend implementation", android.widget.Toast.LENGTH_SHORT).show()
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)
