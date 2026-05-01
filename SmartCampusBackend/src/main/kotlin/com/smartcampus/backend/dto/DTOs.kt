@@ -255,6 +255,26 @@ data class PlacementDriveResponse(
 
 // ==================== NOTIFICATION DTOs ====================
 @Serializable
+data class OfficerStudentResponse(
+    val userId: Int,
+    val name: String,
+    val email: String,
+    val branch: String?,
+    val semester: Int?,
+    val cgpa: Float?,
+    val skills: List<String>,
+    val placementStatus: String
+)
+
+@Serializable
+data class MassNotificationRequest(
+    val title: String,
+    val message: String,
+    val targetAudience: String,
+    val type: String = "ANNOUNCEMENT"
+)
+
+@Serializable
 data class NotificationResponse(
     val id: Int,
     val title: String,
@@ -306,6 +326,18 @@ data class DashboardAnalytics(
     val skillDemandData: Map<String, Float> = emptyMap(),
     val regionDemandData: Map<String, Float> = emptyMap(),
     val applicationSuccessRate: Float = 0f
+)
+
+@Serializable
+data class OfficerDashboardResponse(
+    val totalStudents: Int,
+    val placedStudents: Int,
+    val unplacedStudents: Int,
+    val highestPackage: String,
+    val averagePackage: String,
+    val totalOffers: Int,
+    val activeDrives: List<PlacementDriveResponse>,
+    val departmentWisePlacements: Map<String, Int>
 )
 
 // ==================== COMMON ====================

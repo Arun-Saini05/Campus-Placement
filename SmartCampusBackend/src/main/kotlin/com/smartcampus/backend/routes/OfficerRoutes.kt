@@ -58,6 +58,45 @@ fun Route.officerRoutes() {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
                 }
             }
+
+            // Search/Filter all students
+            get("/students") {
+                try {
+                    val branch = call.request.queryParameters["branch"]
+                    val minCgpa = call.request.queryParameters["minCgpa"]?.toFloatOrNull()
+                    val status = call.request.queryParameters["status"]
+
+                    val students = officerService.searchStudents(branch, minCgpa, status)
+                    call.respond(HttpStatusCode.OK, students)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+            // Delete a drive
+            delete("/drives/{driveId}") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val driveId = call.parameters["driveId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid drive ID")
+                    val response = officerService.deleteDrive(driveId, userId)
+                    call.respond(if (response.success) HttpStatusCode.OK else HttpStatusCode.BadRequest, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+            // Mass Notification System
+            post("/notifications/mass") {
+                try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val request = call.receive<MassNotificationRequest>()
+                    val response = officerService.sendMassNotification(userId, request)
+                    call.respond(if (response.success) HttpStatusCode.OK else HttpStatusCode.BadRequest, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
         }
     }
 }

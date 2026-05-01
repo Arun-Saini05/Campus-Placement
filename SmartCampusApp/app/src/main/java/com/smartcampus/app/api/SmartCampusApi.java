@@ -146,6 +146,23 @@ public interface SmartCampusApi {
         @GET("officer/drives/{driveId}/eligible")
         Call<List<JsonObject>> getEligibleStudents(@Header("Authorization") String token, @Path("driveId") int driveId);
 
+        @GET("officer/stats")
+        Call<JsonObject> getOfficerStats(@Header("Authorization") String token);
+
+        @GET("officer/students")
+        Call<List<JsonObject>> searchStudents(
+                @Header("Authorization") String token,
+                @Query("branch") String branch,
+                @Query("minCgpa") Float minCgpa,
+                @Query("status") String status
+        );
+
+        @POST("officer/notifications/mass")
+        Call<JsonObject> sendMassNotification(@Header("Authorization") String token, @Body Map<String, Object> body);
+
+        @DELETE("officer/drives/{driveId}")
+        Call<JsonObject> deleteDrive(@Header("Authorization") String token, @Path("driveId") int driveId);
+
         // ========== RECRUITER ==========
         @POST("recruiter/search")
         Call<List<JsonObject>> searchCandidates(@Header("Authorization") String token, @Body Map<String, Object> body);
