@@ -92,12 +92,24 @@ object GitHubTrendingService {
         "elasticsearch" to "Search/Data",
         "cybersecurity" to "Security",
         "blockchain" to "Web3",
-        "solidity" to "Web3"
+        "solidity" to "Web3",
+        "tailwind" to "Web Styling",
+        "bootstrap" to "Web Styling",
+        "numpy" to "Data Science",
+        "pandas" to "Data Science",
+        "scikit-learn" to "AI/ML",
+        "jenkins" to "DevOps",
+        "ansible" to "DevOps",
+        "github-actions" to "DevOps",
+        "vitest" to "Testing",
+        "jest" to "Testing"
     )
 
-    // Regional mapping for Indian tech hubs
+    // Regional mapping for tech hubs
     private val regionAssignment = listOf(
-        "Bangalore", "Mumbai", "Pune", "Hyderabad", "Delhi NCR", "Chennai", "Global"
+        "Bangalore", "Mumbai", "Pune", "Hyderabad", "Delhi NCR", "Chennai", 
+        "Kolkata", "Ahmedabad", "Jaipur", "Kochi", "Indore", "Noida", 
+        "Coimbatore", "Thiruvananthapuram", "Chandigarh", "Global"
     )
 
     private val client = HttpClient(CIO) {

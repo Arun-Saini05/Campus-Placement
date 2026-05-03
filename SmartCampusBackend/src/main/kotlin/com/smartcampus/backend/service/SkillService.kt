@@ -138,10 +138,7 @@ class SkillService {
             emptyList()
         }
 
-        if (githubSkills.isNotEmpty()) return githubSkills
-
-        // Fallback to DB
-        return transaction {
+        val dbFallback = transaction {
             TrendingSkills.selectAll()
                 .orderBy(TrendingSkills.demandScore to SortOrder.DESC)
                 .limit(40)
@@ -157,6 +154,19 @@ class SkillService {
                     )
                 }
         }
+
+        // Merge results: GitHub skills first, then DB fallback for missing skills
+        val combined = githubSkills.toMutableList()
+        if (combined.size < 15) {
+            val existingNames = combined.map { it.skillName.lowercase() }.toSet()
+            dbFallback.forEach { dbSkill ->
+                if (dbSkill.skillName.lowercase() !in existingNames && combined.size < 30) {
+                    combined.add(dbSkill)
+                }
+            }
+        }
+
+        return combined.sortedByDescending { it.demandScore }
     }
 
     fun getRegionList(): List<RegionInfo> {

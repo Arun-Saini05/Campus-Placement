@@ -105,42 +105,83 @@ object SeedData {
 
             // Trending skills
             if (TrendingSkills.selectAll().count() == 0L) {
-                val trendingData = listOf(
-                    Triple("React", 96f, "Bangalore"),
-                    Triple("TensorFlow", 95f, "Bangalore"),
-                    Triple("TypeScript", 94f, "Pune"),
-                    Triple("Kotlin", 90f, "Pune")
-                )
-                trendingData.forEach { (skill, score, region) ->
-                    TrendingSkills.insert {
-                        it[skillName] = skill
-                        it[demandScore] = score
-                        it[TrendingSkills.region] = region
-                        it[semester] = 5
-                        it[branch] = "Computer Science"
-                        it[dataSource] = "Job Portal Analysis"
-                        it[scrapedAt] = now
-                    }
-                }
+                seedTrendingSkills(now)
+            }
+        }
+    }
+
+    private fun seedTrendingSkills(now: LocalDateTime) {
+        val trendingData = listOf(
+            // Bangalore
+            Triple("React", 96f, "Bangalore"),
+            Triple("TensorFlow", 95f, "Bangalore"),
+            Triple("Spring Boot", 92f, "Bangalore"),
+            Triple("Node.js", 89f, "Bangalore"),
+            // Mumbai
+            Triple("Python", 94f, "Mumbai"),
+            Triple("AWS", 93f, "Mumbai"),
+            Triple("Java", 91f, "Mumbai"),
+            Triple("Docker", 88f, "Mumbai"),
+            // Pune
+            Triple("TypeScript", 94f, "Pune"),
+            Triple("Kotlin", 90f, "Pune"),
+            Triple("Angular", 87f, "Pune"),
+            Triple("Kubernetes", 85f, "Pune"),
+            // Hyderabad
+            Triple("GCP", 92f, "Hyderabad"),
+            Triple("Next.js", 91f, "Hyderabad"),
+            Triple("PostgreSQL", 89f, "Hyderabad"),
+            Triple("FastAPI", 86f, "Hyderabad"),
+            // Delhi NCR
+            Triple("Machine Learning", 95f, "Delhi NCR"),
+            Triple("React Native", 88f, "Delhi NCR"),
+            Triple("C++", 87f, "Delhi NCR"),
+            Triple("MongoDB", 84f, "Delhi NCR"),
+            // Chennai
+            Triple("Azure", 90f, "Chennai"),
+            Triple("Flutter", 89f, "Chennai"),
+            Triple("Swift", 86f, "Chennai"),
+            Triple("Redis", 83f, "Chennai"),
+            // Kolkata
+            Triple("PHP", 82f, "Kolkata"),
+            Triple("Laravel", 80f, "Kolkata"),
+            Triple("SQL", 85f, "Kolkata"),
+            // Ahmedabad
+            Triple("Go", 88f, "Ahmedabad"),
+            Triple("Rust", 84f, "Ahmedabad"),
+            // Jaipur
+            Triple("WordPress", 75f, "Jaipur"),
+            Triple("UI/UX Design", 88f, "Jaipur"),
+            // Kochi
+            Triple("Cybersecurity", 91f, "Kochi"),
+            // Noida
+            Triple("DevOps", 93f, "Noida"),
+            // Global
+            Triple("Generative AI", 98f, "Global"),
+            Triple("LLMs", 97f, "Global"),
+            Triple("Blockchain", 85f, "Global")
+        )
+        
+        trendingData.forEach { (skill, score, region) ->
+            TrendingSkills.insert {
+                it[skillName] = skill
+                it[demandScore] = score
+                it[TrendingSkills.region] = region
+                it[semester] = (3..8).random()
+                it[branch] = listOf("Computer Science", "Information Technology", "Electronics").random()
+                it[dataSource] = "Industry Market Analysis"
+                it[scrapedAt] = now
             }
         }
     }
 
     fun refreshTrendingSkills() {
         transaction {
-            val now = LocalDateTime.now()
-            TrendingSkills.deleteAll()
-            val trendingData = listOf(Triple("React", 96f, "Bangalore"), Triple("Kotlin", 90f, "Pune"))
-            trendingData.forEach { (skill, score, region) ->
-                TrendingSkills.insert {
-                    it[TrendingSkills.skillName] = skill
-                    it[TrendingSkills.demandScore] = score
-                    it[TrendingSkills.region] = region
-                    it[TrendingSkills.semester] = 5
-                    it[TrendingSkills.branch] = "Computer Science"
-                    it[TrendingSkills.dataSource] = "Job Portal Analysis"
-                    it[TrendingSkills.scrapedAt] = now
-                }
+            val count = TrendingSkills.selectAll().count()
+            // Only refresh if data is sparse (less than 10 items)
+            if (count < 10) {
+                val now = LocalDateTime.now()
+                seedTrendingSkills(now)
             }
         }
     }
