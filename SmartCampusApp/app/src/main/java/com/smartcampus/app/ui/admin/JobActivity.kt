@@ -24,22 +24,27 @@ class JobActivity : AppCompatActivity() {
     private lateinit var binding: ActivityJobListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: JobAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityJobListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = JobAdapter(
-            jobs = adminService.viewAllJobs(),
+            jobs = emptyList(),
             onEdit = { job -> showJobDialog(job) },
             onDelete = { job -> 
-                adminService.deleteJob(job.id)
-                refreshList()
+                adminService.deleteJob(token, job.id) { success ->
+                    if (success) refreshList()
+                    else android.widget.Toast.makeText(this, "Failed to delete job", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         )
 
@@ -49,11 +54,15 @@ class JobActivity : AppCompatActivity() {
         binding.fabAddJob.setOnClickListener {
             showJobDialog(null)
         }
+        
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.jobs = adminService.viewAllJobs()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllJobs(token) { jobs ->
+            adapter.jobs = jobs
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showJobDialog(job: Job?) {
@@ -93,11 +102,16 @@ class JobActivity : AppCompatActivity() {
                 
                 if (title.isNotBlank() && company.isNotBlank() && location.isNotBlank() && salary.isNotBlank()) {
                     if (job == null) {
-                        adminService.addJob(title, company, location, salary)
+                        adminService.addJob(token, title, company, location, salary) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to add job", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        adminService.updateJob(job.id, title, company, location, salary)
+                        adminService.updateJob(token, job.id, title, company, location, salary) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to update job", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -125,6 +139,7 @@ class JobAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (position >= jobs.size) return
         val job = jobs[position]
         holder.tvTitle.text = job.title
         holder.tvSubtitle.text = job.companyName

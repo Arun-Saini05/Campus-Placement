@@ -199,11 +199,27 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
         })
     }
 
-    fun addJob(title: String, companyName: String, location: String, salaryPackage: String): Job = Job(0, title, companyName, location, salaryPackage)
-    fun updateJob(id: Int, title: String, companyName: String, location: String, salaryPackage: String): Boolean = true
-    fun deleteJob(id: Int): Boolean = true
+    fun addJob(token: String, title: String, companyName: String, location: String, salaryPackage: String, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
+    
+    fun updateJob(token: String, id: Int, title: String, companyName: String, location: String, salaryPackage: String, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
+    
+    fun deleteJob(token: String, id: Int, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
 
-    fun addApplication(studentName: String, jobTitle: String, status: String): Application = Application(0, studentName, jobTitle, status)
-    fun updateApplication(id: Int, studentName: String, jobTitle: String, status: String): Boolean = true
-    fun deleteApplication(id: Int): Boolean = true
+    fun addApplication(token: String, studentName: String, jobTitle: String, status: String, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
+    
+    fun updateApplication(token: String, id: Int, studentName: String, jobTitle: String, status: String, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
+    
+    fun deleteApplication(token: String, id: Int, callback: (Boolean) -> Unit) {
+        callback(true)
+    }
 }

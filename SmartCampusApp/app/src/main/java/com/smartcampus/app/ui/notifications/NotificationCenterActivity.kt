@@ -65,27 +65,57 @@ class NotificationCenterActivity : AppCompatActivity() {
                     }
 
                     response.body()!!.forEach { notif ->
+                        val id = notif.get("id")?.asInt ?: 0
+                        val title = notif.get("title")?.asString ?: "Notification"
+                        val message = notif.get("message")?.asString ?: ""
                         val isRead = notif.get("isRead")?.asBoolean ?: false
+                        
                         val card = MaterialCardView(this@NotificationCenterActivity).apply {
                             setCardBackgroundColor(resources.getColor(
                                 if (isRead) R.color.bg_card else R.color.bg_card_light, null))
                             radius = 12f
+                            strokeWidth = if (isRead) 0 else 2
+                            strokeColor = resources.getColor(R.color.primary, null)
                             setContentPadding(24, 20, 24, 20)
                             layoutParams = LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.MATCH_PARENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT
                             ).apply { bottomMargin = 8 }
+                            isClickable = true
+                            isFocusable = true
                         }
+                        
+                        card.setOnClickListener {
+                            // Show Detail Dialog
+                            com.google.android.material.dialog.MaterialAlertDialogBuilder(this@NotificationCenterActivity)
+                                .setTitle(title)
+                                .setMessage(message)
+                                .setPositiveButton("Close") { dialog, _ -> dialog.dismiss() }
+                                .show()
+
+                            // Mark as read in backend
+                            if (!isRead) {
+                                ApiClient.getApi().markAsRead(session.authToken, id).enqueue(object : Callback<JsonObject> {
+                                    override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                                        loadNotifications(container) // Refresh list
+                                    }
+                                    override fun onFailure(call: Call<JsonObject>, t: Throwable) {}
+                                })
+                            }
+                        }
+
                         val inner = LinearLayout(this@NotificationCenterActivity).apply { orientation = LinearLayout.VERTICAL }
                         inner.addView(TextView(this@NotificationCenterActivity).apply {
-                            text = notif.get("title")?.asString ?: "Notification"
+                            text = title
                             textSize = 15f
                             setTextColor(resources.getColor(R.color.text_primary, null))
                             setTypeface(typeface, if (isRead) android.graphics.Typeface.NORMAL else android.graphics.Typeface.BOLD)
                         })
                         inner.addView(TextView(this@NotificationCenterActivity).apply {
-                            text = notif.get("message")?.asString ?: ""
+                            text = message
                             textSize = 13f
+                            maxLines = 1
+                            ellipsize = android.text.TextUtils.TruncateAt.END
                             setTextColor(resources.getColor(R.color.text_secondary, null))
                             setPadding(0, 4, 0, 0)
                         })

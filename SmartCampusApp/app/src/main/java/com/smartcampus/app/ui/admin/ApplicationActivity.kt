@@ -23,22 +23,27 @@ class ApplicationActivity : AppCompatActivity() {
     private lateinit var binding: ActivityApplicationListBinding
     private lateinit var adminService: AdminService
     private lateinit var adapter: ApplicationAdapter
+    private lateinit var token: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityApplicationListBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        val session = com.smartcampus.app.utils.SessionManager(this)
+        token = session.authToken
         adminService = AdminService()
         
         binding.toolbar.setNavigationOnClickListener { finish() }
 
         adapter = ApplicationAdapter(
-            applications = adminService.viewAllApplications(),
+            applications = emptyList(),
             onEdit = { app -> showApplicationDialog(app) },
             onDelete = { app -> 
-                adminService.deleteApplication(app.id)
-                refreshList()
+                adminService.deleteApplication(token, app.id) { success ->
+                    if (success) refreshList()
+                    else android.widget.Toast.makeText(this, "Failed to delete application", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
         )
 
@@ -48,11 +53,15 @@ class ApplicationActivity : AppCompatActivity() {
         binding.fabAddApplication.setOnClickListener {
             showApplicationDialog(null)
         }
+
+        refreshList()
     }
 
     private fun refreshList() {
-        adapter.applications = adminService.viewAllApplications()
-        adapter.notifyDataSetChanged()
+        adminService.viewAllApplications(token) { list ->
+            adapter.applications = list
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun showApplicationDialog(app: Application?) {
@@ -85,11 +94,16 @@ class ApplicationActivity : AppCompatActivity() {
                 val status = statusInput.text.toString()
                 if (studentName.isNotBlank() && jobTitle.isNotBlank() && status.isNotBlank()) {
                     if (app == null) {
-                        adminService.addApplication(studentName, jobTitle, status)
+                        adminService.addApplication(token, studentName, jobTitle, status) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to add application", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     } else {
-                        adminService.updateApplication(app.id, studentName, jobTitle, status)
+                        adminService.updateApplication(token, app.id, studentName, jobTitle, status) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to update application", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
-                    refreshList()
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -117,6 +131,7 @@ class ApplicationAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        if (position >= applications.size) return
         val app = applications[position]
         holder.tvTitle.text = app.studentName
         holder.tvSubtitle.text = app.jobTitle

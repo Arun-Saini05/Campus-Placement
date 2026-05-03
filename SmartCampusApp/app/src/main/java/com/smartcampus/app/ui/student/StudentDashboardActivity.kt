@@ -63,7 +63,21 @@ class StudentDashboardActivity : AppCompatActivity() {
 
         // Notification bell
         findViewById<android.widget.ImageView>(R.id.ivNotifications).setOnClickListener {
+            findViewById<android.view.View>(R.id.viewNotificationBadge).visibility = android.view.View.GONE
             startActivity(Intent(this, NotificationCenterActivity::class.java))
+        }
+
+        // Refresh Button
+        findViewById<android.widget.ImageView>(R.id.btnRefresh).setOnClickListener {
+            val swipeRefresh = findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipeRefresh)
+            swipeRefresh.isRefreshing = true
+            loadDashboardData()
+        }
+
+        // Swipe to Refresh
+        val swipeRefresh = findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipeRefresh)
+        swipeRefresh.setOnRefreshListener {
+            loadDashboardData()
         }
 
         loadDashboardData()
@@ -113,6 +127,21 @@ class StudentDashboardActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<List<JsonObject>>, t: Throwable) { /* silent */ }
+        })
+
+        // Load unread notification count
+        ApiClient.getApi().getUnreadCount(token).enqueue(object : Callback<JsonObject> {
+            override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipeRefresh).isRefreshing = false
+                if (response.isSuccessful && response.body() != null) {
+                    val count = response.body()!!.get("count")?.asInt ?: 0
+                    findViewById<android.view.View>(R.id.viewNotificationBadge).visibility = 
+                        if (count > 0) android.view.View.VISIBLE else android.view.View.GONE
+                }
+            }
+            override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                findViewById<androidx.swiperefreshlayout.widget.SwipeRefreshLayout>(R.id.swipeRefresh).isRefreshing = false
+            }
         })
     }
 }

@@ -35,6 +35,22 @@ class PlacementOfficerService {
             type = "DRIVE_CREATED"
         )
 
+        // Notify all students about the new drive
+        transaction {
+            val studentIds = Users.select { Users.role eq "STUDENT" }.map { it[Users.id] }
+            if (studentIds.isNotEmpty()) {
+                val now = LocalDateTime.now()
+                Notifications.batchInsert(studentIds) { studentId ->
+                    this[Notifications.userId] = studentId
+                    this[Notifications.title] = "New Placement Drive: ${request.companyName}"
+                    this[Notifications.message] = "A new placement drive for ${request.companyName} has been posted with a package of ${request.salaryPackage ?: "N/A"}. Check your job list for full details."
+                    this[Notifications.type] = "NEW_DRIVE"
+                    this[Notifications.isRead] = false
+                    this[Notifications.createdAt] = now
+                }
+            }
+        }
+
         return MessageResponse("Placement drive created successfully")
     }
 
@@ -117,14 +133,25 @@ class PlacementOfficerService {
         return transaction {
             val totalStudents = Users.select { Users.role eq "STUDENT" }.count().toInt()
             
-            // Get all successful applications with their associated job data
-            val successfulApps = (JobApplications innerJoin Jobs)
+            // Get student IDs from successful applications
+            val successfulAppStudentIds = JobApplications
                 .select { JobApplications.status eq "SELECTED" }
+                .map { it[JobApplications.studentId] }
             
-            val totalOffers = successfulApps.count().toInt()
-            val placedStudentIds = successfulApps.map { it[JobApplications.studentId] }.distinct()
+            // Get student IDs marked as PLACED in their profile
+            val manuallyPlacedStudentIds = StudentProfiles
+                .select { StudentProfiles.placementStatus eq "PLACED" }
+                .map { it[StudentProfiles.userId] }
+
+            // Combine for unique placed students
+            val placedStudentIds = (successfulAppStudentIds + manuallyPlacedStudentIds).distinct()
             val placedStudentsCount = placedStudentIds.size
             val unplacedStudents = totalStudents - placedStudentsCount
+
+            // Get applications for package calculation
+            val successfulApps = (JobApplications innerJoin Jobs)
+                .select { JobApplications.status eq "SELECTED" }
+            val totalOffers = successfulApps.count().toInt()
 
             // Parse and calculate packages
             val packages = successfulApps.mapNotNull { row ->
