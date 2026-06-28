@@ -410,3 +410,54 @@ data class ExternalJobDto(
     val salaryCurrency: String?,
     val jobType: String?
 )
+
+@Serializable
+data class AdminStatsResponse(
+    val totalUsers: Long,
+    val activeUsers: Long,
+    val totalStudents: Long,
+    val totalRecruiters: Long,
+    val totalOfficers: Long,
+    val totalJobs: Long,
+    val totalApplications: Long,
+    val totalDrives: Long,
+    val totalColleges: Long,
+    val totalCompanies: Long,
+    val trendingSkillsCount: Long,
+    val collegeWisePlacementPercentage: Map<String, Double> = emptyMap(),
+    val companyWiseHiringCount: Map<String, Int> = emptyMap(),
+    val departmentWisePlacementStats: Map<String, Int> = emptyMap(),
+    val monthlyPlacementTrends: Map<String, Int> = emptyMap()
+)
+
+@Serializable
+data class CollegeResponse(
+    val id: Int,
+    val name: String,
+    val location: String
+)
+
+@Serializable
+data class CompanyResponse(
+    val id: Int,
+    val name: String,
+    val industry: String,
+    val location: String
+)
+
+@Serializable
+data class AdminJobResponse(
+    val id: Int,
+    val title: String,
+    val companyName: String,
+    val location: String,
+    val salaryPackage: String
+)
+
+@Serializable
+data class AdminApplicationResponse(
+    val id: Int,
+    val studentName: String,
+    val jobId: Int,
+    val status: String
+)

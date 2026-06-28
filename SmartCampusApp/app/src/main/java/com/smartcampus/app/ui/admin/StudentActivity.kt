@@ -99,7 +99,10 @@ class StudentActivity : AppCompatActivity() {
                             else android.widget.Toast.makeText(this, "Failed to add student", android.widget.Toast.LENGTH_SHORT).show()
                         }
                     } else {
-                        android.widget.Toast.makeText(this, "Update pending backend implementation", android.widget.Toast.LENGTH_SHORT).show()
+                        adminService.updateStudent(token, student.id, name, email, branch) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to update student", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

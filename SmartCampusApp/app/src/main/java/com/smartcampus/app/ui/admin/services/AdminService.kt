@@ -48,7 +48,7 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
 
     // --- Recruitment Officer Management ---
     fun addRecruitmentOfficer(token: String, name: String, email: String, company: String, callback: (Boolean) -> Unit) {
-        val body = mapOf("name" to name, "email" to email, "role" to "PLACEMENT_OFFICER", "enrollmentId" to "OFF" + System.currentTimeMillis() % 10000)
+        val body = mapOf("name" to name, "email" to email, "password" to "officer123", "role" to "PLACEMENT_OFFICER", "enrollmentId" to "OFF" + System.currentTimeMillis() % 10000)
         com.smartcampus.app.api.ApiClient.getApi().register(body).enqueue(object : retrofit2.Callback<com.smartcampus.app.models.User> {
             override fun onResponse(call: retrofit2.Call<com.smartcampus.app.models.User>, response: retrofit2.Response<com.smartcampus.app.models.User>) {
                 callback(response.isSuccessful)
@@ -64,7 +64,7 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
             override fun onResponse(call: retrofit2.Call<List<com.google.gson.JsonObject>>, response: retrofit2.Response<List<com.google.gson.JsonObject>>) {
                 if (response.isSuccessful && response.body() != null) {
                     val list = response.body()!!
-                        .filter { it.get("role").asString == "PLACEMENT_OFFICER" }
+                        .filter { it.get("role").asString == "PLACEMENT_OFFICER" && it.get("isActive").asBoolean }
                         .map { row ->
                             RecruitmentOfficer(row.get("id").asInt, row.get("name").asString, row.get("email").asString, "Campus")
                         }
@@ -120,7 +120,7 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
 
     // --- Student Management ---
     fun addStudent(token: String, name: String, email: String, branch: String, callback: (Boolean) -> Unit) {
-        val body = mapOf("name" to name, "email" to email, "role" to "STUDENT", "enrollmentId" to "STU" + System.currentTimeMillis() % 10000)
+        val body = mapOf("name" to name, "email" to email, "password" to "student123", "role" to "STUDENT", "enrollmentId" to "STU" + System.currentTimeMillis() % 10000)
         com.smartcampus.app.api.ApiClient.getApi().register(body).enqueue(object : retrofit2.Callback<com.smartcampus.app.models.User> {
             override fun onResponse(call: retrofit2.Call<com.smartcampus.app.models.User>, response: retrofit2.Response<com.smartcampus.app.models.User>) {
                 callback(response.isSuccessful)
@@ -136,7 +136,7 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
             override fun onResponse(call: retrofit2.Call<List<com.google.gson.JsonObject>>, response: retrofit2.Response<List<com.google.gson.JsonObject>>) {
                 if (response.isSuccessful && response.body() != null) {
                     val students = response.body()!!
-                        .filter { it.get("role").asString == "STUDENT" }
+                        .filter { it.get("role").asString == "STUDENT" && it.get("isActive").asBoolean }
                         .map { row ->
                             Student(
                                 id = row.get("id").asInt,
@@ -199,16 +199,63 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
         })
     }
 
+    fun updateCollege(token: String, id: Int, name: String, location: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "location" to location)
+        com.smartcampus.app.api.ApiClient.getApi().updateCollege(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
+    }
+
+    fun updateCompany(token: String, id: Int, name: String, industry: String, location: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "industry" to industry, "location" to location)
+        com.smartcampus.app.api.ApiClient.getApi().updateCompany(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
+    }
+
     fun addJob(token: String, title: String, companyName: String, location: String, salaryPackage: String, callback: (Boolean) -> Unit) {
-        callback(true)
+        val body = mapOf("title" to title, "companyName" to companyName, "location" to location, "salaryPackage" to salaryPackage)
+        com.smartcampus.app.api.ApiClient.getApi().addAdminJob(token, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
     
     fun updateJob(token: String, id: Int, title: String, companyName: String, location: String, salaryPackage: String, callback: (Boolean) -> Unit) {
-        callback(true)
+        val body = mapOf("title" to title, "companyName" to companyName, "location" to location, "salaryPackage" to salaryPackage)
+        com.smartcampus.app.api.ApiClient.getApi().updateAdminJob(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
     
     fun deleteJob(token: String, id: Int, callback: (Boolean) -> Unit) {
-        callback(true)
+        com.smartcampus.app.api.ApiClient.getApi().deleteAdminJob(token, id).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 
     fun addApplication(token: String, studentName: String, jobTitle: String, status: String, callback: (Boolean) -> Unit) {
@@ -216,10 +263,49 @@ class AdminService(private val repository: AdminRepository = AdminRepository) {
     }
     
     fun updateApplication(token: String, id: Int, studentName: String, jobTitle: String, status: String, callback: (Boolean) -> Unit) {
-        callback(true)
+        val body = mapOf("status" to status)
+        com.smartcampus.app.api.ApiClient.getApi().updateAdminApplication(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
     
     fun deleteApplication(token: String, id: Int, callback: (Boolean) -> Unit) {
-        callback(true)
+        com.smartcampus.app.api.ApiClient.getApi().deleteAdminApplication(token, id).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
+    }
+
+    fun updateStudent(token: String, id: Int, name: String, email: String, branch: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "email" to email, "branch" to branch)
+        com.smartcampus.app.api.ApiClient.getApi().updateUser(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
+    }
+
+    fun updateRecruitmentOfficer(token: String, id: Int, name: String, email: String, company: String, callback: (Boolean) -> Unit) {
+        val body = mapOf("name" to name, "email" to email)
+        com.smartcampus.app.api.ApiClient.getApi().updateUser(token, id, body).enqueue(object : retrofit2.Callback<com.google.gson.JsonObject> {
+            override fun onResponse(call: retrofit2.Call<com.google.gson.JsonObject>, response: retrofit2.Response<com.google.gson.JsonObject>) {
+                callback(response.isSuccessful)
+            }
+            override fun onFailure(call: retrofit2.Call<com.google.gson.JsonObject>, t: Throwable) {
+                callback(false)
+            }
+        })
     }
 }

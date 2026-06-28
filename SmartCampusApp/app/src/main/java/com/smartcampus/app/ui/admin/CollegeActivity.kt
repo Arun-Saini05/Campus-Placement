@@ -91,7 +91,10 @@ class CollegeActivity : AppCompatActivity() {
                             if (success) refreshList()
                         }
                     } else {
-                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
+                        adminService.updateCollege(token, college.id, name, location) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Update failed", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

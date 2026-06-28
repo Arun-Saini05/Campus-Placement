@@ -97,7 +97,10 @@ class CompanyActivity : AppCompatActivity() {
                             if (success) refreshList()
                         }
                     } else {
-                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
+                        adminService.updateCompany(token, company.id, name, industry, location) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Update failed", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

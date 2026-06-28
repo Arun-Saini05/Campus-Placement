@@ -30,7 +30,8 @@ fun Route.officerRoutes() {
             // Get all drives
             get("/drives") {
                 try {
-                    val drives = officerService.getAllDrives()
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val drives = officerService.getAllDrives(userId)
                     call.respond(HttpStatusCode.OK, drives)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
@@ -52,7 +53,8 @@ fun Route.officerRoutes() {
             // Get placement stats
             get("/stats") {
                 try {
-                    val stats = officerService.getPlacementStats()
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
+                    val stats = officerService.getPlacementStats(userId)
                     call.respond(HttpStatusCode.OK, stats)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
@@ -62,11 +64,12 @@ fun Route.officerRoutes() {
             // Search/Filter all students
             get("/students") {
                 try {
+                    val userId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
                     val branch = call.request.queryParameters["branch"]
                     val minCgpa = call.request.queryParameters["minCgpa"]?.toFloatOrNull()
                     val status = call.request.queryParameters["status"]
 
-                    val students = officerService.searchStudents(branch, minCgpa, status)
+                    val students = officerService.searchStudents(userId, branch, minCgpa, status)
                     call.respond(HttpStatusCode.OK, students)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))

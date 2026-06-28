@@ -40,7 +40,10 @@ fun Application.configureDatabase() {
             PlacementDrives,
             Notifications,
             ResumeViews,
-            RoadmapProgress
+            RoadmapProgress,
+            Colleges,
+            Companies,
+            RecruiterProfiles
         )
     }
 

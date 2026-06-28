@@ -43,13 +43,15 @@ fun Route.jobRoutes() {
             // Get all jobs with optional filters
             get {
                 try {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                    val role = call.principal<JWTPrincipal>()?.payload?.getClaim("role")?.asString()
                     val filter = JobFilterRequest(
                         skill = call.request.queryParameters["skill"],
                         location = call.request.queryParameters["location"],
                         minSalary = call.request.queryParameters["minSalary"],
                         jobType = call.request.queryParameters["jobType"]
                     )
-                    val jobs = jobService.getAllJobs(filter)
+                    val jobs = jobService.getAllJobs(filter, userId, role)
                     call.respond(HttpStatusCode.OK, jobs)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
@@ -71,9 +73,11 @@ fun Route.jobRoutes() {
             // Get applications for a specific job (Recruiter/Officer)
             get("/{jobId}/applications") {
                 try {
+                    val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asInt()
+                    val role = call.principal<JWTPrincipal>()?.payload?.getClaim("role")?.asString()
                     val jobId = call.parameters["jobId"]?.toIntOrNull()
                         ?: throw IllegalArgumentException("Invalid job ID")
-                    val applications = jobService.getApplicationsForJob(jobId)
+                    val applications = jobService.getApplicationsForJob(jobId, userId, role)
                     call.respond(HttpStatusCode.OK, applications)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))

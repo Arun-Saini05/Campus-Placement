@@ -97,7 +97,10 @@ class OfficerActivity : AppCompatActivity() {
                             if (success) refreshList()
                         }
                     } else {
-                        android.widget.Toast.makeText(this, "Update pending", android.widget.Toast.LENGTH_SHORT).show()
+                        adminService.updateRecruitmentOfficer(token, officer.id, name, email, company) { success ->
+                            if (success) refreshList()
+                            else android.widget.Toast.makeText(this, "Failed to update officer", android.widget.Toast.LENGTH_SHORT).show()
+                        }
                     }
                 }
             }

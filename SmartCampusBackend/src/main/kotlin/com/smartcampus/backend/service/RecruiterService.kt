@@ -28,11 +28,16 @@ class RecruiterService {
         }
     }
 
-    fun searchCandidates(request: CandidateSearchRequest): List<CandidateResponse> {
-
+    fun searchCandidates(recruiterUserId: Int, request: CandidateSearchRequest): List<CandidateResponse> {
         return transaction {
-            var query = (StudentProfiles innerJoin Users)
-                .select { Users.role eq "STUDENT" }
+            val recruiterCollegeId = Users.select { Users.id eq recruiterUserId }.singleOrNull()?.get(Users.collegeId)
+            var query = if (recruiterCollegeId != null) {
+                (StudentProfiles innerJoin Users)
+                    .select { (Users.role eq "STUDENT") and (Users.collegeId eq recruiterCollegeId) }
+            } else {
+                (StudentProfiles innerJoin Users)
+                    .select { Users.role eq "STUDENT" }
+            }
 
             request.branch?.let { branch ->
                 query = query.andWhere { StudentProfiles.branch eq branch }
@@ -190,6 +195,36 @@ class RecruiterService {
                 it[feedback] = request.feedback
                 it[updatedAt] = LocalDateTime.now()
             }
+            MessageResponse("Interview scheduled successfully", true)
+        }
+    }
+
+    fun scheduleInterviewDirect(studentId: Int, jobId: Int, date: String, link: String?, note: String?): MessageResponse {
+        return transaction {
+            val app = JobApplications.select { 
+                (JobApplications.studentId eq studentId) and (JobApplications.jobId eq jobId) 
+            }.singleOrNull()
+            
+            val appId = if (app != null) {
+                app[JobApplications.id]
+            } else {
+                JobApplications.insert {
+                    it[JobApplications.jobId] = jobId
+                    it[JobApplications.studentId] = studentId
+                    it[status] = "INTERVIEW_SCHEDULED"
+                    it[appliedAt] = LocalDateTime.now()
+                    it[updatedAt] = LocalDateTime.now()
+                } get JobApplications.id
+            }
+            
+            JobApplications.update({ JobApplications.id eq appId }) {
+                it[status] = "INTERVIEW_SCHEDULED"
+                it[interviewDate] = LocalDateTime.parse(date)
+                it[interviewLink] = link
+                it[feedback] = note
+                it[updatedAt] = LocalDateTime.now()
+            }
+            
             MessageResponse("Interview scheduled successfully", true)
         }
     }

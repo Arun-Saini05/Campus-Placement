@@ -96,7 +96,7 @@ class RecruiterDashboardActivity : AppCompatActivity() {
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
             layoutParams = LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginEnd = dp(6) }
             setOnClickListener {
-                Toast.makeText(this@RecruiterDashboardActivity, "Opening Candidate Search...", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this@RecruiterDashboardActivity, CandidateSearchActivity::class.java))
             }
         }
 
@@ -113,7 +113,7 @@ class RecruiterDashboardActivity : AppCompatActivity() {
             iconGravity = MaterialButton.ICON_GRAVITY_TEXT_START
             layoutParams = LinearLayout.LayoutParams(0, dp(56), 1f).apply { marginStart = dp(6) }
             setOnClickListener {
-                Toast.makeText(this@RecruiterDashboardActivity, "Opening Job Post Form...", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(this@RecruiterDashboardActivity, PostJobActivity::class.java))
             }
         }
 

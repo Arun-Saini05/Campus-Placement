@@ -18,8 +18,9 @@ fun Route.recruiterRoutes() {
             // Search candidates
             post("/search") {
                 try {
+                    val recruiterId = call.principal<JWTPrincipal>()!!.payload.getClaim("userId").asInt()
                     val request = call.receive<CandidateSearchRequest>()
-                    val candidates = recruiterService.searchCandidates(request)
+                    val candidates = recruiterService.searchCandidates(recruiterId, request)
                     call.respond(HttpStatusCode.OK, candidates)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
@@ -77,6 +78,21 @@ fun Route.recruiterRoutes() {
                 try {
                     val request = call.receive<InterviewScheduleRequest>()
                     val response = recruiterService.scheduleInterview(request)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
+            post("/schedule-interview-direct") {
+                try {
+                    val params = call.receive<Map<String, String>>()
+                    val studentId = params["studentId"]?.toIntOrNull() ?: throw IllegalArgumentException("studentId required")
+                    val jobId = params["jobId"]?.toIntOrNull() ?: throw IllegalArgumentException("jobId required")
+                    val date = params["interviewDate"] ?: throw IllegalArgumentException("interviewDate required")
+                    val link = params["interviewLink"]
+                    val feedback = params["feedback"]
+                    val response = recruiterService.scheduleInterviewDirect(studentId, jobId, date, link, feedback)
                     call.respond(HttpStatusCode.OK, response)
                 } catch (e: Exception) {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))

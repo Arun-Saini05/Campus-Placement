@@ -1,6 +1,8 @@
 package com.smartcampus.app.ui.student
 
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.smartcampus.app.R
@@ -17,7 +19,7 @@ class EditProfileActivity : AppCompatActivity() {
 
     private lateinit var session: SessionManager
     private lateinit var etSemester: TextInputEditText
-    private lateinit var etBranch: TextInputEditText
+    private lateinit var etBranch: AutoCompleteTextView
     private lateinit var etCgpa: TextInputEditText
     private lateinit var etRegion: TextInputEditText
     private lateinit var etAbout: TextInputEditText
@@ -33,10 +35,22 @@ class EditProfileActivity : AppCompatActivity() {
         etRegion = findViewById(R.id.etRegion)
         etAbout = findViewById(R.id.etAbout)
 
+        // Set up Branch dropdown options
+        val departments = arrayOf(
+            "Computer Science",
+            "Information Tech",
+            "ECE",
+            "Electrical",
+            "Mechanical",
+            "Civil"
+        )
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, departments)
+        etBranch.setAdapter(adapter)
+
         // Pre-fill from intent extras
         intent.extras?.let { extras ->
             extras.getInt("semester", 0).let { if (it > 0) etSemester.setText(it.toString()) }
-            extras.getString("branch")?.let { etBranch.setText(it) }
+            extras.getString("branch")?.let { etBranch.setText(it, false) }
             extras.getFloat("cgpa", 0f).let { if (it > 0f) etCgpa.setText(it.toString()) }
             extras.getString("region")?.let { etRegion.setText(it) }
             extras.getString("about")?.let { etAbout.setText(it) }

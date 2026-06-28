@@ -1,8 +1,43 @@
+import java.net.InetAddress
+import java.net.NetworkInterface
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
+}
+
+def getLocalIP() {
+    if (project.hasProperty("localIpOverride")) {
+        return project.property("localIpOverride")
+    }
+    def envOverride = System.getenv("LOCAL_IP_OVERRIDE")
+    if (envOverride != null && !envOverride.isEmpty()) {
+        return envOverride
+    }
+    try {
+        def interfaces = NetworkInterface.getNetworkInterfaces()
+        while (interfaces.hasMoreElements()) {
+            def iface = interfaces.nextElement()
+            if (iface.isUp() && !iface.isLoopback()) {
+                def name = iface.getName().toLowerCase()
+                if (name.contains("docker") || name.contains("vbox") || name.contains("virtual") || name.contains("wsl") || name.contains("vmnet")) {
+                    continue
+                }
+                def addresses = iface.getInetAddresses()
+                while (addresses.hasMoreElements()) {
+                    def addr = addresses.nextElement()
+                    if (addr instanceof java.net.Inet4Address && addr.isSiteLocalAddress()) {
+                        return addr.getHostAddress()
+                    }
+                }
+            }
+        }
+    } catch (Exception e) {
+        // ignore
+    }
+    return "10.0.2.2" // Fallback for android emulator
 }
 
 android {
@@ -18,8 +53,10 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // Backend URL - change for production
-        buildConfigField "String", "BASE_URL", '"http://192.168.0.103:8081/api/"'
+        // Backend URL - dynamically resolved based on current network configuration
+        def localIp = getLocalIP()
+        logger.quiet("Dynamically resolved local IP for BASE_URL: $localIp")
+        buildConfigField "String", "BASE_URL", "\"http://${localIp}:8081/api/\""
     }
 
     buildTypes {

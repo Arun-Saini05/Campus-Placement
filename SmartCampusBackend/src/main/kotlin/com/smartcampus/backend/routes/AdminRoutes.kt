@@ -9,6 +9,11 @@ import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
+import com.smartcampus.backend.service.JobService
+import com.smartcampus.backend.models.JobApplications
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 
 fun Route.adminRoutes() {
     val adminService = AdminService()
@@ -80,6 +85,24 @@ fun Route.adminRoutes() {
                 }
             }
 
+            // Update user details
+            put("/users/{userId}") {
+                try {
+                    val role = call.principal<JWTPrincipal>()!!.payload.getClaim("role").asString()
+                    if (role != "ADMIN") {
+                        call.respond(HttpStatusCode.Forbidden, MessageResponse("Admin access required", false))
+                        return@put
+                    }
+                    val userId = call.parameters["userId"]?.toIntOrNull()
+                        ?: throw IllegalArgumentException("Invalid user ID")
+                    val params = call.receive<Map<String, String>>()
+                    adminService.updateUser(userId, params["name"]!!, params["email"]!!, params["branch"])
+                    call.respond(HttpStatusCode.OK, MessageResponse("User updated successfully"))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
+
             // Get system stats
             get("/stats") {
                 try {
@@ -136,13 +159,80 @@ fun Route.adminRoutes() {
                 call.respond(HttpStatusCode.OK, MessageResponse("Company deleted"))
             }
 
+            // --- College & Company Updates ---
+            put("/colleges/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(HttpStatusCode.BadRequest)
+                val params = call.receive<Map<String, String>>()
+                adminService.updateCollege(id, params["name"]!!, params["location"]!!)
+                call.respond(HttpStatusCode.OK, MessageResponse("College updated"))
+            }
+
+            put("/companies/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(HttpStatusCode.BadRequest)
+                val params = call.receive<Map<String, String>>()
+                adminService.updateCompany(id, params["name"]!!, params["industry"]!!, params["location"]!!)
+                call.respond(HttpStatusCode.OK, MessageResponse("Company updated"))
+            }
+
             // --- Job & Application Management ---
             get("/jobs") {
                 call.respond(HttpStatusCode.OK, adminService.getAllJobs())
             }
 
+            post("/jobs") {
+                val params = call.receive<Map<String, String>>()
+                val principal = call.principal<JWTPrincipal>()
+                val userId = principal?.payload?.getClaim("userId")?.asInt() ?: 1
+                adminService.addJob(
+                    params["title"]!!,
+                    params["companyName"]!!,
+                    params["location"]!!,
+                    params["salaryPackage"]!!,
+                    params["description"] ?: "No description provided",
+                    params["requiredSkills"] ?: "None",
+                    userId
+                )
+                call.respond(HttpStatusCode.Created, MessageResponse("Job added"))
+            }
+
+            put("/jobs/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(HttpStatusCode.BadRequest)
+                val params = call.receive<Map<String, String>>()
+                adminService.updateJob(
+                    id,
+                    params["title"]!!,
+                    params["companyName"]!!,
+                    params["location"]!!,
+                    params["salaryPackage"]!!
+                )
+                call.respond(HttpStatusCode.OK, MessageResponse("Job updated"))
+            }
+
+            delete("/jobs/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                adminService.deleteJob(id)
+                call.respond(HttpStatusCode.OK, MessageResponse("Job deleted"))
+            }
+
             get("/applications") {
                 call.respond(HttpStatusCode.OK, adminService.getAllApplications())
+            }
+
+            put("/applications/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@put call.respond(HttpStatusCode.BadRequest)
+                val params = call.receive<Map<String, String>>()
+                val status = params["status"] ?: throw IllegalArgumentException("Status required")
+                val jobService = JobService()
+                jobService.updateApplicationStatus(id, status)
+                call.respond(HttpStatusCode.OK, MessageResponse("Application updated"))
+            }
+
+            delete("/applications/{id}") {
+                val id = call.parameters["id"]?.toIntOrNull() ?: return@delete call.respond(HttpStatusCode.BadRequest)
+                transaction {
+                    JobApplications.deleteWhere { JobApplications.id eq id }
+                }
+                call.respond(HttpStatusCode.OK, MessageResponse("Application deleted"))
             }
         }
     }

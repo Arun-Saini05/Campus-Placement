@@ -12,6 +12,7 @@ object Users : Table("users") {
     val enrollmentId = varchar("enrollment_id", 50).nullable()
     val role = varchar("role", 30) // STUDENT, RECRUITER, PLACEMENT_OFFICER, ADMIN
     val isActive = bool("is_active").default(true)
+    val collegeId = integer("college_id").references(Colleges.id).nullable()
     val createdAt = datetime("created_at")
     val updatedAt = datetime("updated_at")
 
@@ -113,6 +114,7 @@ object RecruiterProfiles : Table("recruiter_profiles") {
     val id = integer("id").autoIncrement()
     val userId = integer("user_id").references(Users.id).uniqueIndex()
     val companyName = varchar("company_name", 200)
+    val companyId = integer("company_id").references(Companies.id).nullable()
     val companyLogoUrl = varchar("company_logo_url", 500).nullable()
     val website = varchar("website", 200).nullable()
     val industry = varchar("industry", 100).nullable()
@@ -134,6 +136,8 @@ object Jobs : Table("jobs") {
     val requiredSkills = varchar("required_skills", 1000)
     val salaryPackage = varchar("salary_package", 100).nullable()
     val jobType = varchar("job_type", 30) // INTERNSHIP, FULL_TIME, PART_TIME
+    val minCgpa = float("min_cgpa").nullable()
+    val eligibilityCriteria = text("eligibility_criteria").nullable()
     val applicationDeadline = datetime("application_deadline").nullable()
     val postedBy = integer("posted_by").references(Users.id)
     val isActive = bool("is_active").default(true)

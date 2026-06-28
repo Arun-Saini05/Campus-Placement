@@ -12,9 +12,18 @@ class JobService {
 
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
-    fun getAllJobs(filter: JobFilterRequest? = null): List<JobResponse> {
+    fun getAllJobs(filter: JobFilterRequest? = null, requestingUserId: Int? = null, requestingRole: String? = null): List<JobResponse> {
         return transaction {
-            var query = Jobs.selectAll() // Show all jobs, even inactive ones, so applicants see them "blurred"
+            var query = if (requestingRole == "STUDENT" && requestingUserId != null) {
+                val studentCollegeId = Users.select { Users.id eq requestingUserId }.singleOrNull()?.get(Users.collegeId)
+                if (studentCollegeId != null) {
+                    (Jobs innerJoin Users).slice(Jobs.columns).select { (Users.collegeId eq studentCollegeId) and (Jobs.isActive eq true) }
+                } else {
+                    Jobs.selectAll()
+                }
+            } else {
+                Jobs.selectAll()
+            }
 
             filter?.let { f ->
                 f.location?.let { loc ->
@@ -166,8 +175,14 @@ class JobService {
         }
     }
 
-    fun getApplicationsForJob(jobId: Int): List<CandidateResponse> {
+    fun getApplicationsForJob(jobId: Int, requestingUserId: Int? = null, requestingRole: String? = null): List<CandidateResponse> {
         return transaction {
+            if (requestingRole == "RECRUITER" && requestingUserId != null) {
+                val job = Jobs.select { Jobs.id eq jobId }.singleOrNull()
+                if (job == null || job[Jobs.postedBy] != requestingUserId) {
+                    throw IllegalArgumentException("Unauthorized to view applications for this job")
+                }
+            }
             (JobApplications innerJoin Users)
                 .select { JobApplications.jobId eq jobId }
                 .map { row ->

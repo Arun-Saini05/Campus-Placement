@@ -67,6 +67,8 @@
 
         <!-- Recruiter -->
         <activity android:name=".ui.recruiter.RecruiterDashboardActivity" />
+        <activity android:name=".ui.recruiter.PostJobActivity" />
+        <activity android:name=".ui.recruiter.CandidateSearchActivity" />
 
         <!-- Admin -->
         <activity android:name=".ui.admin.AdminDashboardActivity" />

@@ -204,6 +204,12 @@ public interface SmartCampusApi {
                         @Path("userId") int userId,
                         @Query("activate") boolean activate);
 
+        @PUT("admin/users/{userId}")
+        Call<JsonObject> updateUser(
+                        @Header("Authorization") String token,
+                        @Path("userId") int userId,
+                        @Body Map<String, String> body);
+
         @GET("admin/stats")
         Call<JsonObject> getSystemStats(@Header("Authorization") String token);
 
@@ -217,6 +223,9 @@ public interface SmartCampusApi {
         @POST("admin/colleges")
         Call<JsonObject> addCollege(@Header("Authorization") String token, @Body Map<String, String> body);
 
+        @PUT("admin/colleges/{id}")
+        Call<JsonObject> updateCollege(@Header("Authorization") String token, @Path("id") int id, @Body Map<String, String> body);
+
         @DELETE("admin/colleges/{id}")
         Call<JsonObject> deleteCollege(@Header("Authorization") String token, @Path("id") int id);
 
@@ -226,6 +235,31 @@ public interface SmartCampusApi {
         @POST("admin/companies")
         Call<JsonObject> addCompany(@Header("Authorization") String token, @Body Map<String, String> body);
 
+        @PUT("admin/companies/{id}")
+        Call<JsonObject> updateCompany(@Header("Authorization") String token, @Path("id") int id, @Body Map<String, String> body);
+
         @DELETE("admin/companies/{id}")
         Call<JsonObject> deleteCompany(@Header("Authorization") String token, @Path("id") int id);
+
+        @POST("admin/jobs")
+        Call<JsonObject> addAdminJob(@Header("Authorization") String token, @Body Map<String, String> body);
+
+        @PUT("admin/jobs/{id}")
+        Call<JsonObject> updateAdminJob(@Header("Authorization") String token, @Path("id") int id, @Body Map<String, String> body);
+
+        @DELETE("admin/jobs/{id}")
+        Call<JsonObject> deleteAdminJob(@Header("Authorization") String token, @Path("id") int id);
+
+        @PUT("admin/applications/{id}")
+        Call<JsonObject> updateAdminApplication(@Header("Authorization") String token, @Path("id") int id, @Body Map<String, String> body);
+
+        @DELETE("admin/applications/{id}")
+        Call<JsonObject> deleteAdminApplication(@Header("Authorization") String token, @Path("id") int id);
+
+        // --- Recruiter Job Posting & Direct Interview ---
+        @POST("jobs")
+        Call<JsonObject> postJob(@Header("Authorization") String token, @Body Map<String, Object> body);
+
+        @POST("recruiter/schedule-interview-direct")
+        Call<JsonObject> scheduleInterviewDirect(@Header("Authorization") String token, @Body Map<String, String> body);
 }

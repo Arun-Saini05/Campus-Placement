@@ -54,10 +54,18 @@ class PlacementOfficerService {
         return MessageResponse("Placement drive created successfully")
     }
 
-    fun getAllDrives(): List<PlacementDriveResponse> {
+    fun getAllDrives(officerUserId: Int): List<PlacementDriveResponse> {
         return transaction {
-            PlacementDrives.selectAll()
-                .orderBy(PlacementDrives.createdAt to SortOrder.DESC)
+            val officerCollegeId = Users.select { Users.id eq officerUserId }.singleOrNull()?.get(Users.collegeId)
+            val query = if (officerCollegeId != null) {
+                (PlacementDrives innerJoin Users)
+                    .slice(PlacementDrives.columns)
+                    .select { Users.collegeId eq officerCollegeId }
+            } else {
+                PlacementDrives.selectAll()
+            }
+
+            query.orderBy(PlacementDrives.createdAt to SortOrder.DESC)
                 .map { row ->
                     val eligibleCount = getEligibleStudentCount(
                         row[PlacementDrives.minCgpa],
@@ -129,34 +137,49 @@ class PlacementOfficerService {
         }
     }
 
-    fun getPlacementStats(): OfficerDashboardResponse {
+    fun getPlacementStats(officerUserId: Int): OfficerDashboardResponse {
         return transaction {
-            val totalStudents = Users.select { Users.role eq "STUDENT" }.count().toInt()
+            val officerCollegeId = Users.select { Users.id eq officerUserId }.singleOrNull()?.get(Users.collegeId)
             
-            // Get student IDs from successful applications
-            val successfulAppStudentIds = JobApplications
-                .select { JobApplications.status eq "SELECTED" }
-                .map { it[JobApplications.studentId] }
+            val totalStudents = if (officerCollegeId != null) {
+                Users.select { (Users.role eq "STUDENT") and (Users.collegeId eq officerCollegeId) }.count().toInt()
+            } else {
+                Users.select { Users.role eq "STUDENT" }.count().toInt()
+            }
             
-            // Get student IDs marked as PLACED in their profile
-            val manuallyPlacedStudentIds = StudentProfiles
-                .select { StudentProfiles.placementStatus eq "PLACED" }
-                .map { it[StudentProfiles.userId] }
+            val collegeStudentQuery = if (officerCollegeId != null) {
+                Users.select { (Users.role eq "STUDENT") and (Users.collegeId eq officerCollegeId) }
+            } else {
+                Users.select { Users.role eq "STUDENT" }
+            }
+            val collegeStudentIds = collegeStudentQuery.map { it[Users.id] }
 
-            // Combine for unique placed students
+            val successfulAppStudentIds = if (collegeStudentIds.isNotEmpty()) {
+                JobApplications
+                    .select { (JobApplications.status eq "SELECTED") and (JobApplications.studentId inList collegeStudentIds) }
+                    .map { it[JobApplications.studentId] }
+            } else emptyList()
+            
+            val manuallyPlacedStudentIds = if (collegeStudentIds.isNotEmpty()) {
+                StudentProfiles
+                    .select { (StudentProfiles.placementStatus eq "PLACED") and (StudentProfiles.userId inList collegeStudentIds) }
+                    .map { it[StudentProfiles.userId] }
+            } else emptyList()
+
             val placedStudentIds = (successfulAppStudentIds + manuallyPlacedStudentIds).distinct()
             val placedStudentsCount = placedStudentIds.size
             val unplacedStudents = totalStudents - placedStudentsCount
 
-            // Get applications for package calculation
-            val successfulApps = (JobApplications innerJoin Jobs)
-                .select { JobApplications.status eq "SELECTED" }
+            val successfulApps = if (collegeStudentIds.isNotEmpty()) {
+                (JobApplications innerJoin Jobs)
+                    .select { (JobApplications.status eq "SELECTED") and (JobApplications.studentId inList collegeStudentIds) }
+            } else {
+                (JobApplications innerJoin Jobs).select { JobApplications.status eq "SELECTED" }
+            }
             val totalOffers = successfulApps.count().toInt()
 
-            // Parse and calculate packages
             val packages = successfulApps.mapNotNull { row ->
                 val pkgStr = row[Jobs.salaryPackage] ?: return@mapNotNull null
-                // Extract numeric value from string like "12 LPA" or "₹ 8.5"
                 pkgStr.replace(Regex("[^0-9.]"), "").toDoubleOrNull()
             }
 
@@ -175,10 +198,17 @@ class PlacementOfficerService {
                     }
             }
 
-            val activeDrives = PlacementDrives.selectAll()
-                .orderBy(PlacementDrives.createdAt to SortOrder.DESC)
-                .limit(5)
-                .map { row ->
+            val activeDrives = if (officerCollegeId != null) {
+                (PlacementDrives innerJoin Users)
+                    .slice(PlacementDrives.columns)
+                    .select { Users.collegeId eq officerCollegeId }
+                    .orderBy(PlacementDrives.createdAt to SortOrder.DESC)
+                    .limit(5)
+            } else {
+                PlacementDrives.selectAll()
+                    .orderBy(PlacementDrives.createdAt to SortOrder.DESC)
+                    .limit(5)
+            }.map { row ->
                     PlacementDriveResponse(
                         id = row[PlacementDrives.id],
                         companyName = row[PlacementDrives.companyName],
@@ -208,10 +238,17 @@ class PlacementOfficerService {
         }
     }
 
-    fun searchStudents(branchFilter: String?, minCgpaFilter: Float?, statusFilter: String?): List<OfficerStudentResponse> {
+    fun searchStudents(officerUserId: Int, branchFilter: String?, minCgpaFilter: Float?, statusFilter: String?): List<OfficerStudentResponse> {
         return transaction {
-            var query = (StudentProfiles innerJoin Users)
-                .select { Users.role eq "STUDENT" }
+            val officerCollegeId = Users.select { Users.id eq officerUserId }.singleOrNull()?.get(Users.collegeId)
+            
+            var query = if (officerCollegeId != null) {
+                (StudentProfiles innerJoin Users)
+                    .select { (Users.role eq "STUDENT") and (Users.collegeId eq officerCollegeId) }
+            } else {
+                (StudentProfiles innerJoin Users)
+                    .select { Users.role eq "STUDENT" }
+            }
 
             branchFilter?.let { b ->
                 if (b.isNotBlank() && b != "All Branches") {
