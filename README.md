@@ -68,26 +68,20 @@ graph TD
 
 ## 🛠️ Technology Stack
 
-<details>
-<summary><b>📱 Mobile (Frontend)</b></summary>
-<br>
+### 📱 Mobile (Frontend)
 
 - **Language**: Kotlin
 - **UI**: XML (Material Design)
 - **Networking**: Retrofit 2, Gson
 - **Maps**: WebView + Leaflet.js
-</details>
 
-<details>
-<summary><b>⚙️ Server (Backend)</b></summary>
-<br>
+### ⚙️ Server (Backend)
 
 - **Framework**: Ktor (Kotlin)
 - **Database ORM**: JetBrains Exposed
 - **Security**: JWT (JSON Web Tokens)
 - **Serialization**: Kotlinx Serialization
 - **External API**: GitHub API v3 (via Ktor Client)
-</details>
 
 ---
 
@@ -105,12 +99,11 @@ Calculates a **Readiness %** by comparing a student's current skills against rea
 
 ---
 
-## 📂 Interactive Folder Structure
+## 📂 Folder Structure
 
-Click to expand and explore the codebase structure:
+Explore the codebase structure:
 
-<details>
-<summary><b>📁 SmartCampusBackend/ (The Brain)</b></summary>
+### 📁 SmartCampusBackend/ (The Brain)
 
 - `src/main/kotlin/` - **The Brain:** Contains 100% of the logic.
   - `Application.kt` - **The Entry Point:** The "Power Button" of your server.
@@ -119,16 +112,13 @@ Click to expand and explore the codebase structure:
   - `GitHubTrendingService.kt` - **The Researcher:** Surfs GitHub for global trends.
 - `src/main/resources/` - **The Settings:** 
   - `application.conf` - Database credentials, port numbers, and security keys.
-</details>
 
-<details>
-<summary><b>📁 SmartCampusApp/ (The Face)</b></summary>
+### 📁 SmartCampusApp/ (The Face)
 
 - `app/src/main/` - **The Core App:** Android code (Kotlin) and Layouts (XML).
 - `SmartCampusApi.java` - **The Phonebook:** Central list of all API endpoints.
 - `build.gradle` - **The Recipe:** Required libraries (Retrofit, Gson, etc.).
 - `local.properties` - **Personal Path:** Android SDK path for local machine.
-</details>
 
 ---
 
@@ -155,16 +145,7 @@ Click to expand and explore the codebase structure:
 
 ---
 
-## 📚 Specialized Documentation
 
-Dive deeper into specific components using our specialized guides:
-- 📖 [**PROJECT OVERVIEW**](PROJECT_OVERVIEW.md) - The master overview of the project.
-- 🔍 [**PROJECT DEEP DIVE**](PROJECT_DEEP_DIVE.md) - Deep dive into features and roadmap.
-- 🔌 [**API DOCUMENTATION**](API_DOCUMENTATION.md) - Endpoints and integration details.
-- 🎓 [**VIVA MASTER GUIDE**](VIVA_MASTER_GUIDE.md) & [**VIVA DOCUMENTATION**](VIVA_DOCUMENTATION.md) - Comprehensive guides for project defense.
-- 📖 [**STORY OF SMARTCAMPUS**](STORY_OF_SMARTCAMPUS.md) - The inception and journey.
-
----
 <div align="center">
 <i>Built with ❤️ for accelerating student careers.</i>
 </div>
