@@ -1,50 +1,170 @@
-# SmartCampusApp
+<div align="center">
 
-Welcome to **SmartCampusApp**, an intelligent placement and career acceleration platform designed specifically to guide students through their university journey into successful industry placements.
+# 🎓 SmartCampus
 
-## Table of Contents
-- [Features](#features)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Contributing](#contributing)
+**An Intelligent Career Acceleration Platform**
 
-## Features
-- **Dynamic Career Roadmaps:** Interactive semester-by-semester roadmaps detailing essential skills, certifications, and project benchmarks to prepare for the industry.
-- **Skill Tracking:** Visually track completed skills and view real-time market demand metrics directly on your dashboard.
-- **Personalized Recommendations:** Intelligent guidance funneling students towards high-value, trending technologies like React, AWS, Docker, and Python.
-- **Resume Builder:** An integrated resume generation tool right inside the Android application.
-- **Career Hub:** Centralized hub highlighting external open jobs and campus placement listings.
+[![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white)](#)
+[![Android](https://img.shields.io/badge/Android-3DDC84?style=for-the-badge&logo=android&logoColor=white)](#)
+[![Ktor](https://img.shields.io/badge/Ktor-087CFA?style=for-the-badge&logo=ktor&logoColor=white)](#)
+[![PostgreSQL](https://img.shields.io/badge/postgresql-4169e1?style=for-the-badge&logo=postgresql&logoColor=white)](#)
 
-## Architecture
-The platform is broken into two isolated codebases existing within this repository:
+*Bridging the gap between academic learning and industry placement through data-driven guidance, skill gap analysis, and placement management.*
 
-1. **SmartCampusApp (Frontend)**: 
-   - A Native Android client built securely using **Kotlin**.
-   - Traditional XML layout system with modern **Material UI** components.
-   - Leverages **Retrofit** and **Gson** for network requests to the backend API.
+</div>
 
-2. **SmartCampusBackend (Backend)**: 
-   - A blazing-fast async Kotlin server engineered using the **Ktor** framework over Netty.
-   - Secures traffic via **JWT Authentication** pipelines.
-   - Connects to a relational **PostgreSQL** database using the **Jetbrains Exposed** ORM via HikariCP. 
+---
 
-## Getting Started
+## ✨ Key Features
 
-### Prerequisites
-- JDK 17
-- Android Studio 
-- PostgreSQL
+| Feature | Description |
+| :--- | :--- |
+| 🗺️ **Interactive Skill Map** | Real-time regional demand visualization across 16 tech hubs. |
+| 🛤️ **Personalized Roadmaps** | Semester-wise learning paths tailored to current industry trends. |
+| 📄 **Resume Builder** | Integrated tools with an ATS (Applicant Tracking System) scorer for placement prep. |
+| 🔔 **Mass Notifications** | Real-time broadcasts for placement drives and crucial updates. |
 
-### 🖥️ Backend Setup (Ktor)
-1. Navigate into `SmartCampusBackend/`
-2. Review and update `src/main/resources/application.conf` with your PostgreSQL database credentials and JWT Secret.
-3. Run the backend directly using the Gradle wrapper:
+---
+
+## 🏗️ System Architecture
+
+SmartCampus uses a robust Client-Server Architecture. Below is an interactive map of how data flows through the system.
+
+```mermaid
+graph TD
+    subgraph "📱 Client Layer (Android)"
+        A[SmartCampus App]
+        S[Student UI] --> A
+        R[Recruiter UI] --> A
+        O[Officer UI] --> A
+    end
+
+    subgraph "⚙️ Backend Layer (Ktor)"
+        B[SmartCampus Server]
+        Auth[JWT Authentication]
+        logic[Skill & Readiness Logic]
+        
+        B --> Auth
+        Auth --> logic
+    end
+
+    subgraph "💾 Data Layer"
+        DB[(PostgreSQL)]
+        ORM[JetBrains Exposed ORM]
+        
+        ORM <--> DB
+    end
+    
+    subgraph "🌐 External APIs"
+        GH[GitHub API v3]
+    end
+
+    A -- REST API (Retrofit) --> B
+    logic -- Queries --> ORM
+    logic -- Trending Data --> GH
+```
+
+---
+
+## 🛠️ Technology Stack
+
+<details>
+<summary><b>📱 Mobile (Frontend)</b></summary>
+<br>
+
+- **Language**: Kotlin
+- **UI**: XML (Material Design)
+- **Networking**: Retrofit 2, Gson
+- **Maps**: WebView + Leaflet.js
+</details>
+
+<details>
+<summary><b>⚙️ Server (Backend)</b></summary>
+<br>
+
+- **Framework**: Ktor (Kotlin)
+- **Database ORM**: JetBrains Exposed
+- **Security**: JWT (JSON Web Tokens)
+- **Serialization**: Kotlinx Serialization
+- **External API**: GitHub API v3 (via Ktor Client)
+</details>
+
+---
+
+## 🧠 Core "Smart" Logic
+
+### 📈 GitHub Trend Analysis
+The system actively researches industry trends by:
+1. **Scraping**: Searching GitHub for repos with >5,000 stars updated recently.
+2. **Extracting**: Identifying dominant programming languages and topics.
+3. **Scoring**: Normalizing star counts into a **Demand Score (50% - 98%)**.
+4. **Mapping**: Distributing global trends across Indian tech hubs on an interactive map.
+
+### 🎯 Placement Readiness
+Calculates a **Readiness %** by comparing a student's current skills against real-world demand (via GitHub API) and historical placement data.
+
+---
+
+## 📂 Interactive Folder Structure
+
+Click to expand and explore the codebase structure:
+
+<details>
+<summary><b>📁 SmartCampusBackend/ (The Brain)</b></summary>
+
+- `src/main/kotlin/` - **The Brain:** Contains 100% of the logic.
+  - `Application.kt` - **The Entry Point:** The "Power Button" of your server.
+  - `SeedData.kt` - **The Librarian:** Populates the database with default data.
+  - `SkillService.kt` - **The Skill Engine:** Calculates "Readiness %" and regional trends.
+  - `GitHubTrendingService.kt` - **The Researcher:** Surfs GitHub for global trends.
+- `src/main/resources/` - **The Settings:** 
+  - `application.conf` - Database credentials, port numbers, and security keys.
+</details>
+
+<details>
+<summary><b>📁 SmartCampusApp/ (The Face)</b></summary>
+
+- `app/src/main/` - **The Core App:** Android code (Kotlin) and Layouts (XML).
+- `SmartCampusApi.java` - **The Phonebook:** Central list of all API endpoints.
+- `build.gradle` - **The Recipe:** Required libraries (Retrofit, Gson, etc.).
+- `local.properties` - **Personal Path:** Android SDK path for local machine.
+</details>
+
+---
+
+## 🚀 Getting Started
+
+### 📋 Prerequisites
+- **JDK 17**
+- **Android Studio**
+- **PostgreSQL** running locally or remotely
+
+### ⚙️ 1. Backend Setup (Ktor)
+1. Navigate into the backend directory: `cd SmartCampusBackend/`
+2. Update `src/main/resources/application.conf` with your PostgreSQL credentials and JWT Secret.
+3. Run the server using Gradle:
    ```bash
    ./gradlew run
    ```
 
-### 📱 Frontend Setup (Android)
-1. Open the `SmartCampusApp` folder in Android Studio.
-2. Locate the network configurations string inside your Android application (usually inside `build.gradle` or API client configuration). Make sure it correctly flags the internal IP of the machine running your Ktor backend (e.g. `http://192.168.0.x:8080/api/`).
-3. Click **Sync Project with Gradle Files**. 
-4. Select your emulator/device and click **Run**.
+### 📱 2. Frontend Setup (Android)
+1. Open the `SmartCampusApp` folder in **Android Studio**.
+2. Locate the network configurations (usually inside `build.gradle` or API client config) and update the IP to match your local network (e.g., `http://192.168.0.x:8080/api/`).
+3. Click **Sync Project with Gradle Files**.
+4. Select your emulator or connected device and click **Run**.
+
+---
+
+## 📚 Specialized Documentation
+
+Dive deeper into specific components using our specialized guides:
+- 📖 [**PROJECT OVERVIEW**](PROJECT_OVERVIEW.md) - The master overview of the project.
+- 🔍 [**PROJECT DEEP DIVE**](PROJECT_DEEP_DIVE.md) - Deep dive into features and roadmap.
+- 🔌 [**API DOCUMENTATION**](API_DOCUMENTATION.md) - Endpoints and integration details.
+- 🎓 [**VIVA MASTER GUIDE**](VIVA_MASTER_GUIDE.md) & [**VIVA DOCUMENTATION**](VIVA_DOCUMENTATION.md) - Comprehensive guides for project defense.
+- 📖 [**STORY OF SMARTCAMPUS**](STORY_OF_SMARTCAMPUS.md) - The inception and journey.
+
+---
+<div align="center">
+<i>Built with ❤️ for accelerating student careers.</i>
+</div>
