@@ -59,9 +59,11 @@ class CandidateSearchActivity : AppCompatActivity() {
         etBranchFilter.setAdapter(branchAdapter)
         etBranchFilter.setText("All Branches", false)
 
-        adapter = CandidateAdapter(candidateList) { candidate ->
+        adapter = CandidateAdapter(candidateList, { candidate ->
             showScheduleInterviewDialog(candidate)
-        }
+        }, { candidate ->
+            showSelectCandidateDialog(candidate)
+        })
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = adapter
 
@@ -232,6 +234,55 @@ class CandidateSearchActivity : AppCompatActivity() {
             .show()
     }
 
+    private fun showSelectCandidateDialog(candidate: JsonObject) {
+        if (recruiterJobs.isEmpty()) {
+            Toast.makeText(this, "Please post a job first before hiring", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        val layout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 20)
+        }
+
+        val tvJobLabel = TextView(this).apply { text = "Hire candidate for which job?" }
+        val jobSpinner = Spinner(this)
+        val jobTitles = recruiterJobs.map { "${it.title} (${it.companyName})" }
+        val spinnerAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, jobTitles)
+        jobSpinner.adapter = spinnerAdapter
+        
+        layout.addView(tvJobLabel)
+        layout.addView(jobSpinner)
+
+        val candidateName = candidate.get("name")?.asString ?: "Candidate"
+
+        AlertDialog.Builder(this)
+            .setTitle("Hire $candidateName")
+            .setView(layout)
+            .setPositiveButton("Hire") { _, _ ->
+                val selectedJobIndex = jobSpinner.selectedItemPosition
+                val job = recruiterJobs[selectedJobIndex]
+                val body = HashMap<String, String>()
+                body["studentId"] = candidate.get("userId").asInt.toString()
+                body["jobId"] = job.id.toString()
+
+                ApiClient.getApi().selectCandidateDirect(session.authToken, body).enqueue(object : Callback<JsonObject> {
+                    override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                        if (response.isSuccessful) {
+                            Toast.makeText(this@CandidateSearchActivity, "Candidate Hired!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@CandidateSearchActivity, "Failed to hire", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                        Toast.makeText(this@CandidateSearchActivity, "Network error", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
     private fun showDateTimePicker(editText: EditText) {
         val calendar = Calendar.getInstance()
         DatePickerDialog(this, { _, year, month, dayOfMonth ->
@@ -249,7 +300,8 @@ class CandidateSearchActivity : AppCompatActivity() {
 
 class CandidateAdapter(
     private val list: List<JsonObject>,
-    private val onSchedule: (JsonObject) -> Unit
+    private val onSchedule: (JsonObject) -> Unit,
+    private val onSelect: (JsonObject) -> Unit
 ) : RecyclerView.Adapter<CandidateAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -283,8 +335,10 @@ class CandidateAdapter(
         holder.btnEdit.setImageResource(android.R.drawable.ic_menu_my_calendar)
         holder.btnEdit.setOnClickListener { onSchedule(candidate) }
         
-        // Hide delete icon
-        holder.btnDelete.visibility = View.GONE
+        // Show delete icon as hire icon
+        holder.btnDelete.visibility = View.VISIBLE
+        holder.btnDelete.setImageResource(android.R.drawable.ic_menu_add)
+        holder.btnDelete.setOnClickListener { onSelect(candidate) }
     }
 
     override fun getItemCount() = list.size

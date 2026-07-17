@@ -98,6 +98,18 @@ fun Route.recruiterRoutes() {
                     call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
                 }
             }
+
+            post("/select-candidate-direct") {
+                try {
+                    val params = call.receive<Map<String, String>>()
+                    val studentId = params["studentId"]?.toIntOrNull() ?: throw IllegalArgumentException("studentId required")
+                    val jobId = params["jobId"]?.toIntOrNull() ?: throw IllegalArgumentException("jobId required")
+                    val response = recruiterService.selectCandidateDirect(studentId, jobId)
+                    call.respond(HttpStatusCode.OK, response)
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.BadRequest, MessageResponse(e.message ?: "Error", false))
+                }
+            }
         }
     }
 }

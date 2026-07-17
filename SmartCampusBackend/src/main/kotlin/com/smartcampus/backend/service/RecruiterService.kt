@@ -228,5 +228,29 @@ class RecruiterService {
             MessageResponse("Interview scheduled successfully", true)
         }
     }
+
+    fun selectCandidateDirect(studentId: Int, jobId: Int): MessageResponse {
+        return transaction {
+            val app = JobApplications.select { 
+                (JobApplications.studentId eq studentId) and (JobApplications.jobId eq jobId) 
+            }.singleOrNull()
+            
+            if (app != null) {
+                JobApplications.update({ JobApplications.id eq app[JobApplications.id] }) {
+                    it[status] = "SELECTED"
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            } else {
+                JobApplications.insert {
+                    it[JobApplications.jobId] = jobId
+                    it[JobApplications.studentId] = studentId
+                    it[status] = "SELECTED"
+                    it[appliedAt] = LocalDateTime.now()
+                    it[updatedAt] = LocalDateTime.now()
+                }
+            }
+            MessageResponse("Candidate successfully selected!", true)
+        }
+    }
 }
 

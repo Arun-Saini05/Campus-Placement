@@ -262,4 +262,7 @@ public interface SmartCampusApi {
 
         @POST("recruiter/schedule-interview-direct")
         Call<JsonObject> scheduleInterviewDirect(@Header("Authorization") String token, @Body Map<String, String> body);
+
+        @POST("recruiter/select-candidate-direct")
+        Call<JsonObject> selectCandidateDirect(@Header("Authorization") String token, @Body Map<String, String> body);
 }
