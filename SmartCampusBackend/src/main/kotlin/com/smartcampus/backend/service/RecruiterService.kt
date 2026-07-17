@@ -272,6 +272,20 @@ class RecruiterService {
                     it[updatedAt] = LocalDateTime.now()
                 }
             }
+            StudentProfiles.update({ StudentProfiles.userId eq studentId }) {
+                it[placementStatus] = "PLACED"
+                it[updatedAt] = LocalDateTime.now()
+            }
+
+            val jobTitle = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.title) ?: "Job Position"
+            val companyName = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.companyName) ?: "Company"
+            NotificationService().createNotification(
+                userId = studentId,
+                title = "Selected: $companyName",
+                message = "Congratulations! You have been selected for the position of $jobTitle at $companyName.",
+                type = "APPLICATION_STATUS_UPDATE"
+            )
+
             MessageResponse("Candidate successfully selected!", true)
         }
     }
