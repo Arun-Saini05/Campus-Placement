@@ -30,6 +30,8 @@ object SeedData {
             Companies.deleteAll()
             Users.deleteAll()
             Colleges.deleteAll()
+            Skills.deleteAll()
+            TrendingSkills.deleteAll()
 
             // 2. Seed Colleges
             val c1Id = Colleges.insert {
