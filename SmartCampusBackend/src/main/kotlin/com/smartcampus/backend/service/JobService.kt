@@ -146,6 +146,41 @@ class JobService {
                 it[JobApplications.status] = status
                 it[updatedAt] = LocalDateTime.now()
             }
+            
+            val app = JobApplications.select { JobApplications.id eq applicationId }.singleOrNull()
+            val studentUserId = app?.get(JobApplications.studentId)
+            val jobId = app?.get(JobApplications.jobId)
+            
+            if (studentUserId != null && jobId != null) {
+                if (status == "SELECTED") {
+                    StudentProfiles.update({ StudentProfiles.userId eq studentUserId }) {
+                        it[placementStatus] = "PLACED"
+                        it[updatedAt] = LocalDateTime.now()
+                    }
+                }
+                
+                val jobTitle = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.title) ?: "Job Position"
+                val companyName = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.companyName) ?: "Company"
+                val titleStr = when (status) {
+                    "SELECTED" -> "Selected: $companyName"
+                    "REJECTED" -> "Application Status: $companyName"
+                    "SHORTLISTED" -> "Shortlisted: $companyName"
+                    else -> "Application Update: $companyName"
+                }
+                val msgStr = when (status) {
+                    "SELECTED" -> "Congratulations! You have been selected for the position of $jobTitle at $companyName."
+                    "REJECTED" -> "We regret to inform you that your application for $jobTitle at $companyName has been rejected."
+                    "SHORTLISTED" -> "Great news! You have been shortlisted for the position of $jobTitle at $companyName."
+                    else -> "Your application status for the position of $jobTitle at $companyName has been updated to $status."
+                }
+                
+                NotificationService().createNotification(
+                    userId = studentUserId,
+                    title = titleStr,
+                    message = msgStr,
+                    type = "APPLICATION_STATUS_UPDATE"
+                )
+            }
         }
         return MessageResponse("Application status updated to $status")
     }

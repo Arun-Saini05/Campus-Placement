@@ -195,6 +195,20 @@ class RecruiterService {
                 it[feedback] = request.feedback
                 it[updatedAt] = LocalDateTime.now()
             }
+            val application = JobApplications.select { JobApplications.id eq request.applicationId }.singleOrNull()
+            val studentId = application?.get(JobApplications.studentId)
+            val jobId = application?.get(JobApplications.jobId)
+            if (studentId != null && jobId != null) {
+                val jobTitle = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.title) ?: "Job Position"
+                val companyName = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.companyName) ?: "Company"
+                
+                NotificationService().createNotification(
+                    userId = studentId,
+                    title = "Interview Scheduled: $companyName",
+                    message = "An interview has been scheduled for the post of $jobTitle at $companyName. Please check your applications list.",
+                    type = "INTERVIEW_SCHEDULED"
+                )
+            }
             MessageResponse("Interview scheduled successfully", true)
         }
     }
@@ -224,6 +238,15 @@ class RecruiterService {
                 it[feedback] = note
                 it[updatedAt] = LocalDateTime.now()
             }
+            
+            val jobTitle = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.title) ?: "Job Position"
+            val companyName = Jobs.select { Jobs.id eq jobId }.singleOrNull()?.get(Jobs.companyName) ?: "Company"
+            NotificationService().createNotification(
+                userId = studentId,
+                title = "Interview Scheduled: $companyName",
+                message = "An interview has been scheduled for the post of $jobTitle at $companyName. Please check your applications list.",
+                type = "INTERVIEW_SCHEDULED"
+            )
             
             MessageResponse("Interview scheduled successfully", true)
         }
