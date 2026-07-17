@@ -323,7 +323,8 @@ class CandidateAdapter(
         
         val branch = candidate.get("branch")?.asString ?: "N/A"
         val cgpa = candidate.get("cgpa")?.asFloat ?: 0f
-        holder.tvSubtitle.text = "Branch: $branch | CGPA: $cgpa"
+        val email = candidate.get("email")?.asString ?: "N/A"
+        holder.tvSubtitle.text = "Branch: $branch | CGPA: $cgpa\nEmail: $email"
         
         val skillsJson = candidate.get("skills")?.asJsonArray
         val skillsList = mutableListOf<String>()
